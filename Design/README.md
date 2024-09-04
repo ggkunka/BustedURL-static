@@ -41,5 +41,3 @@ Contributions are welcome! If you have suggestions or improvements for these dia
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
-
-Feel free to explore, modify, and utilize these diagrams to better understand the design and functionality of the **BustedURL** multi-agent system.
