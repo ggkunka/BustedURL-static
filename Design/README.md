@@ -27,12 +27,14 @@ This repository contains various diagrams for the **BustedURL** multi-agent AI s
 - **Description**: The Flow Diagram represents the sequence of data flow and actions among different agents in the **BustedURL** system, from data collection to threat response and optimization. It outlines the collaboration and communication among agents, including feedback loops and performance monitoring.
 - **Purpose**: To depict the operational flow and interaction between agents to achieve collaborative detection and response to malicious URLs.
 - **File**: `flow_diagram.drawio`
+- ![state_diagram_adaptive_classifier drawio](https://github.com/user-attachments/assets/457898ca-a1a9-41e7-b626-dabb42a72d45)
 
 ## Getting Started
 
 To get started with the **BustedURL** project, you can explore these diagrams to understand the system's architecture, agent collaboration, and workflows. These diagrams serve as the foundational documentation for understanding how different components interact and function together.
 
 ## Contribution
+
 
 Contributions are welcome! If you have suggestions or improvements for these diagrams, feel free to submit a pull request or open an issue in the repository.
 
