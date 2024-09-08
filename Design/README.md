@@ -1,52 +1,26 @@
-# BustedURL Diagrams
+# BustedURL: A Collaborative Multi-Agent System for Detecting Malicious URLs
 
-This repository contains various diagrams for the **BustedURL** multi-agent AI system, illustrating its architecture, agent interactions, and collaboration mechanisms. These diagrams are intended to provide a comprehensive understanding of how the system is designed, how its components interact, and the overall flow of operations.
+**BustedURL** is a Collaborative Multi-Agent System (CMAS) designed to enhance the detection of malicious URLs by leveraging multiple autonomous agents that work together to share control, communicate, learn, and adapt dynamically. Each agent in the system is responsible for a specific function, and their collaboration results in a more robust, scalable, and efficient solution compared to traditional single-agent systems.
 
-## Diagrams Overview
+## Advantages of BustedURL CMAS Design
 
-### 1. **System Architecture Diagram**
+- **Increased Efficiency**: Agents divide tasks for optimized performance.
+- **Scalability**: New agents can be added as needed to handle larger workloads.
+- **Robustness**: Distributed nature prevents system-wide failure due to single-agent issues.
+- **Flexibility**: Independent agents allow the system to adapt dynamically to new threats.
+- **Enhanced Problem-Solving**: Multiple strategies are used across agents for better results.
 
-- **Description**: The System Architecture Diagram provides an overview of the entire **BustedURL** framework. It illustrates the various agents involved in the system, such as the Data Intelligence Agent, Feature Enhancement Agent, Adaptive Classifier Agent, Threat Response Agent, and System Optimizer Agent. This diagram shows the external and internal interfaces used for data input and output, as well as the communication paths between different agents and the Message Broker.
-- **Purpose**: To offer a high-level understanding of the overall structure and components of the **BustedURL** system.
-- **File**: `BustedURLArchitecture.drawio`
-- ![BustedURLArchitecture](https://github.com/user-attachments/assets/9516e26d-d254-4408-a734-c065c64c9257)
+## Disadvantages Considered
 
+- **Coordination Complexity**: Managed using a central coordination hub.
+- **Increased Overhead**: Mitigated through hierarchical agent structure and efficient communication protocols.
+- **Data Security**: Addressed using secure communication channels and regular audits by the Security Auditor Agent.
+- **Inter-Agent Conflicts**: Resolved through conflict resolution algorithms and synchronization points.
 
-### 2. **Class Diagram**
+## How to Contribute
 
-- **Description**: The Class Diagram details the object-oriented structure of the **BustedURL** system. It displays the various classes (agents, message brokers, and knowledge bases), their attributes, and methods, as well as the relationships and dependencies among them.
-- **Purpose**: To provide a clear understanding of the class structure and the interactions between different objects in the system.
-- **File**: `BustedURLclass_diagram.drawio`
-- ![BustedURLclass_diagram](https://github.com/user-attachments/assets/faa54918-0275-4dcb-93b3-cf72229fff7f)
-
-
-### 3. **State Diagram for Adaptive Classifier Agent**
-
-- **Description**: This diagram shows the different states the **Adaptive Classifier Agent** can be in, such as Idle, Processing, Learning, Error Handling, and Completed. It also illustrates the transitions between these states based on specific events or conditions.
-- **Purpose**: To visualize the state management and transitions of the **Adaptive Classifier Agent** within the **BustedURL** system.
-- **File**: `state_diagram_adaptive_classifier.drawio`
-- ![state_diagram_adaptive_classifier drawio](https://github.com/user-attachments/assets/457898ca-a1a9-41e7-b626-dabb42a72d45)
-
-### 4. **Flow Diagram for BustedURL Process**
-
-- **Description**: The Flow Diagram represents the sequence of data flow and actions among different agents in the **BustedURL** system, from data collection to threat response and optimization. It outlines the collaboration and communication among agents, including feedback loops and performance monitoring.
-- **Purpose**: To depict the operational flow and interaction between agents to achieve collaborative detection and response to malicious URLs.
-- **File**: `flow_diagram.drawio`
-- ![flow_diagram](https://github.com/user-attachments/assets/ac928b98-2f0b-4ee2-81d8-a563d91c9b2a)
-
-
-
-## Getting Started
-
-To get started with the **BustedURL** project, you can explore these diagrams to understand the system's architecture, agent collaboration, and workflows. These diagrams serve as the foundational documentation for understanding how different components interact and function together.
-
-## Contribution
-
-
-Contributions are welcome! If you have suggestions or improvements for these diagrams, feel free to submit a pull request or open an issue in the repository.
+We welcome contributions! Please fork the repository, make your changes, and create a pull request.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
+This project is licensed under the MIT License.
