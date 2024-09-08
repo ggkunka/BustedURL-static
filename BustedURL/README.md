@@ -5,9 +5,9 @@ Here's an updated directory structure formatted for a GitHub `README.md` file:
 ```markdown
 BustedURL/
 │
-├── **app.py**                 # Main entry point for the application
-├── **requirements.txt**       # Dependencies for the app
-├── **README.md**              # Documentation for the app
+├── app.py                 # Main entry point for the application
+├── requirements.txt       # Dependencies for the app
+├── README.md              # Documentation for the app
 │
 ├── **agents/**                # Directory containing all agent classes
 │   ├── **__init__.py**        # Makes the directory a Python package
@@ -19,13 +19,13 @@ BustedURL/
 │   ├── **security_auditor.py**     # Security Auditor Agent
 │   └── **health_monitoring.py**    # Health Monitoring Agent
 │
-├── **core/**                  # Core system files like the Coordination Hub
-│   ├── **__init__.py**        # Makes the directory a Python package
-│   └── **coordination_hub.py**      # Coordination Hub file
+├── core/                  # Core system files like the Coordination Hub
+│   ├── __init__.py        # Makes the directory a Python package
+│   └── coordination_hub.py      # Coordination Hub file
 │
-└── **utils/**                 # Utility functions, e.g., logging, data handling
-    ├── **__init__.py**        # Makes the directory a Python package
-    └── **logger.py**               # Utility for logging
+└── utils/                 # Utility functions, e.g., logging, data handling
+    ├── __init__.py        # Makes the directory a Python package
+    └── logger.py               # Utility for logging
 ```
 
 ### File Descriptions
