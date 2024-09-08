@@ -9,15 +9,15 @@ BustedURL/
 ├── requirements.txt       # Dependencies for the app
 ├── README.md              # Documentation for the app
 │
-├── **agents/**                # Directory containing all agent classes
-│   ├── **__init__.py**        # Makes the directory a Python package
-│   ├── **data_collection.py**      # Data Collection Agent
-│   ├── **feature_extraction.py**   # Feature Extraction Agent
-│   ├── **classification.py**       # Classification Agent
-│   ├── **response.py**             # Response Agent
-│   ├── **system_optimizer.py**     # System Optimizer Agent
-│   ├── **security_auditor.py**     # Security Auditor Agent
-│   └── **health_monitoring.py**    # Health Monitoring Agent
+├── agents/                # Directory containing all agent classes
+│   ├── __init__.py        # Makes the directory a Python package
+│   ├── data_collection.py      # Data Collection Agent
+│   ├── feature_extraction.py   # Feature Extraction Agent
+│   ├── classification.py       # Classification Agent
+│   ├── response.py             # Response Agent
+│   ├── system_optimizer.py     # System Optimizer Agent
+│   ├── security_auditor.py     # Security Auditor Agent
+│   └── health_monitoring.py    # Health Monitoring Agent
 │
 ├── core/                  # Core system files like the Coordination Hub
 │   ├── __init__.py        # Makes the directory a Python package
