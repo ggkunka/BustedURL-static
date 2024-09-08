@@ -18,44 +18,28 @@
 - **Inter-Agent Conflicts**: Resolved through conflict resolution algorithms and synchronization points.
 
 ## Explanation of the Enhanced Architecture:
-- **Central Coordination Hub (CH):**
-
-Acts as the main orchestrator, distributing tasks, managing resources, and ensuring synchronization among agents.
+- **Central Coordination Hub (CH):** Acts as the main orchestrator, distributing tasks, managing resources, and ensuring synchronization among agents.
 Interfaces with each agent to maintain a cohesive system function.
 
-- **Data Collection Agent (DC):**
-
-Collects URLs from various sources and prioritizes them for processing.
+- **Data Collection Agent (DC):** Collects URLs from various sources and prioritizes them for processing.
 Sends the collected data to the Feature Extraction Agent (FE) for further analysis.
 
-- **Feature Extraction Agent (FE):**
-
-Extracts and refines features from URLs, enhancing their semantic and syntactic properties.
+- **Feature Extraction Agent (FE):** Extracts and refines features from URLs, enhancing their semantic and syntactic properties.
 Shares the extracted features with the Classification Agent (CA) for classification tasks.
 
-- **Classification Agent (CA):**
-
-Classifies URLs based on the provided features.
+- **Classification Agent (CA):** Classifies URLs based on the provided features.
 Collaborates with other agents (e.g., the Response Agent (RA)) to fine-tune classification models and thresholds.
 
-- **Response Agent (RA):**
-
-Executes appropriate responses (e.g., blocking URLs, alerting users).
+- **Response Agent (RA):** Executes appropriate responses (e.g., blocking URLs, alerting users).
 Provides feedback to the System Optimizer Agent (SO) to improve overall system performance.
 
-- **System Optimizer Agent (SO):**
-
-Monitors system performance and adjusts resources dynamically.
+- **System Optimizer Agent (SO):** Monitors system performance and adjusts resources dynamically.
 Recommends adjustments to other agents to ensure optimal performance and scalability.
 
-- **Security Auditor Agent (SA):**
-
-Conducts regular security checks and ensures compliance with security policies.
+- **Security Auditor Agent (SA):** Conducts regular security checks and ensures compliance with security policies.
 Provides security insights to the Health Monitoring Agent (HM) and Central Coordination Hub (CH).
 
-- **Health Monitoring Agent (HM):**
-
-Monitors the health of all agents, triggers failovers if needed, and reports the system status.
+- **Health Monitoring Agent (HM):** Monitors the health of all agents, triggers failovers if needed, and reports the system status.
 Communicates health insights back to the Central Coordination Hub (CH).
 
 ## Key Features of This CMAS Design:
