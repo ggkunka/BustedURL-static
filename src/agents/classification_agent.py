@@ -6,6 +6,9 @@ from sklearn.ensemble import GradientBoostingClassifier
 import numpy as np
 import logging  # Add this line
 
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
 class ClassificationAgent(threading.Thread):
     def __init__(self, hub):
         super().__init__()
@@ -15,8 +18,6 @@ class ClassificationAgent(threading.Thread):
         self.logger = get_logger(self.name)
         self.model = GradientBoostingClassifier()
         # Configure logging
-        logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-        logger = logging.getLogger(__name__)
 
     def run(self):
         """
