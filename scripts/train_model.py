@@ -1,6 +1,6 @@
 # scripts/train_model.py
 
-import pandas as pd  # Import pandas library
+import pandas as pd
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.feature_extraction.text import TfidfVectorizer
 from utils.model_helper import load_data, preprocess_data, save_model
@@ -21,6 +21,10 @@ def train_model(data_file, target_column, model_save_path):
         # Load and preprocess data
         df = load_data(data_file)
 
+        # Ensure the correct column names are used
+        if target_column not in df.columns:
+            raise ValueError(f"Target column '{target_column}' not found in the dataset. Available columns: {df.columns}")
+
         # Extract URLs and labels
         urls = df['url'].values
         labels = df[target_column].values
@@ -30,7 +34,11 @@ def train_model(data_file, target_column, model_save_path):
         X = vectorizer.fit_transform(urls)
 
         # Split the data into training and testing sets
-        X_train, X_test, y_train, y_test = preprocess_data(pd.DataFrame(X.toarray()), target_column)
+        df_features = pd.DataFrame(X.toarray())
+        df_features['label'] = labels  # Correctly use 'label' column here
+
+        # Split data
+        X_train, X_test, y_train, y_test = preprocess_data(df_features, 'label')
 
         # Initialize and train the model
         model = GradientBoostingClassifier()
@@ -44,5 +52,5 @@ def train_model(data_file, target_column, model_save_path):
         logger.error(f"Failed to train model: {e}")
 
 if __name__ == "__main__":
-    # Example usage
+    # Ensure 'label' matches the actual column name
     train_model('data/processed/cleaned_data.csv', 'label', 'models/classification/gradient_boosting_model.pkl')
