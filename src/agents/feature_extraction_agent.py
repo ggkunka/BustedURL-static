@@ -39,7 +39,7 @@ class FeatureExtractionAgent(threading.Thread):
         Extracts features from URLs using a BERT model.
         """
         try:
-            logger.info(f"Extracting features for URL: {url}")
+#            logger.info(f"Extracting features for URL: {url}")
             features = self.model(url)  # Example: using a model to extract features
             logger.info(f"Feature extraction completed for URL: {url}")
             return features
