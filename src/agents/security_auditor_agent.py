@@ -6,11 +6,12 @@ import time
 from utils.logger import get_logger
 from pymongo import MongoClient
 
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
 class SecurityAuditorAgent(threading.Thread):
     def __init__(self, hub):
         super().__init__()
-        logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-        logger = logging.getLogger(__name__)
         self.hub = hub
         self.name = "SecurityAuditorAgent"
         self.active = True
