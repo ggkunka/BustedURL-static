@@ -1,0 +1,22 @@
+# tests/test_response.py
+
+import pytest
+from agents.response_agent import ResponseAgent
+from core.coordination_hub import CoordinationHub
+
+@pytest.fixture
+def coordination_hub():
+    return CoordinationHub()
+
+@pytest.fixture
+def response_agent(coordination_hub):
+    return ResponseAgent(coordination_hub)
+
+def test_response_initialization(response_agent):
+    assert response_agent.name == "ResponseAgent"
+    assert response_agent.active is True
+
+def test_take_action(response_agent):
+    classifications = {"http://example.com": "malicious", "https://test.com": "benign"}
+    response_agent.take_action(classifications)
+    # Check logs or other methods to verify correct actions taken
