@@ -7,6 +7,10 @@ import requests
 from bs4 import BeautifulSoup
 from utils.logger import get_logger
 
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
 class DataCollectionAgent(threading.Thread):
     def __init__(self, hub):
         super().__init__()
@@ -14,9 +18,6 @@ class DataCollectionAgent(threading.Thread):
         self.name = "DataCollectionAgent"
         self.active = True
         self.logger = get_logger(self.name)
-        # Configure logging
-        logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-        logger = logging.getLogger(__name__)
 
     def run(self):
         """
