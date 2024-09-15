@@ -1,6 +1,7 @@
 # src/agents/health_monitoring_agent.py
 
 import threading
+import logging
 from prometheus_client import CollectorRegistry, Gauge
 from utils.logger import get_logger
 import psutil
@@ -17,6 +18,9 @@ class HealthMonitoringAgent(threading.Thread):
         self.registry = CollectorRegistry()
         self.cpu_gauge = Gauge('system_cpu_usage', 'CPU usage of the system', registry=self.registry)
         self.memory_gauge = Gauge('system_memory_usage', 'Memory usage of the system', registry=self.registry)
+        # Configure logging
+        logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+        logger = logging.getLogger(__name__)
 
     def run(self):
         """Override the run method to start monitoring in a separate thread."""
