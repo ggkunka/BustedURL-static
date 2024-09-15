@@ -2,8 +2,9 @@
 
 import threading
 import time
-from utils.logger import get_logger
 import requests
+from bs4 import BeautifulSoup
+from utils.logger import get_logger
 
 class DataCollectionAgent(threading.Thread):
     def __init__(self, hub):
@@ -28,11 +29,13 @@ class DataCollectionAgent(threading.Thread):
 
     def collect_urls(self):
         """
-        Simulates collecting URLs from web traffic and other sources.
+        Collects URLs from web sources using BeautifulSoup.
         """
-        # Example: Simulate URL collection using a simple request
+        urls = []
         response = requests.get("https://example.com/urls")  # Replace with actual source
-        urls = response.json().get("urls", [])
+        soup = BeautifulSoup(response.content, 'html.parser')
+        for link in soup.find_all('a'):
+            urls.append(link.get('href'))
         self.logger.info(f"Collected {len(urls)} URLs.")
         return urls
 
