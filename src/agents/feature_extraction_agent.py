@@ -51,7 +51,6 @@ class FeatureExtractionAgent(threading.Thread):
         self.logger.info(f"Extracted features for {len(urls)} URLs.")
         return features
 '''
-
     def extract_features(self, urls):
         """
         Extracts features from URLs using a BERT model.
