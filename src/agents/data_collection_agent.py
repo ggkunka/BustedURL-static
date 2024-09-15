@@ -1,5 +1,6 @@
 # agents/data_collection_agent.py
 
+import logging
 import threading
 import time
 import requests
@@ -13,6 +14,9 @@ class DataCollectionAgent(threading.Thread):
         self.name = "DataCollectionAgent"
         self.active = True
         self.logger = get_logger(self.name)
+        # Configure logging
+        logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+        logger = logging.getLogger(__name__)
 
     def run(self):
         """
@@ -31,6 +35,13 @@ class DataCollectionAgent(threading.Thread):
         """
         Collects URLs from web sources using BeautifulSoup.
         """
+        logger.info("Starting data collection...")
+        try:
+            # Your data collection logic here
+            logger.info("Data collection completed successfully.")
+        except Exception as e:
+            logger.error(f"Error during data collection: {e}")
+            raise
         urls = []
         response = requests.get("https://example.com/urls")  # Replace with actual source
         soup = BeautifulSoup(response.content, 'html.parser')
