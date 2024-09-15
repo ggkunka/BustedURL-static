@@ -2,8 +2,9 @@
 
 import logging
 import threading
-from utils.logger import get_logger
+import time
 from transformers import pipeline
+from utils.logger import get_logger
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -34,23 +35,6 @@ class FeatureExtractionAgent(threading.Thread):
             features = self.extract_features(urls)
             self.hub.send_message(self.name, "ClassificationAgent", {"features": features})
 
-'''
-    def extract_features(self, urls):
-        """
-        Extracts features from URLs using a BERT model.
-        """
-        try:
-#            logger.info(f"Extracting features for URL: {url}")
-            features = self.model(url)  # Example: using a model to extract features
-            logger.info(f"Feature extraction completed for URL: {url}")
-            return features
-        except Exception as e:
-            logger.error(f"Error during feature extraction: {e}")
-            raise
-        features = [self.model(url) for url in urls]
-        self.logger.info(f"Extracted features for {len(urls)} URLs.")
-        return features
-'''
     def extract_features(self, urls):
         """
         Extracts features from URLs using a BERT model.
@@ -58,19 +42,19 @@ class FeatureExtractionAgent(threading.Thread):
         try:
             # Initialize a list to store extracted features
             features = []
-    
+
             # Loop through each URL and extract features
             for url in urls:
-                logger.info(f"Extracting features for URL: {url}")
+                self.logger.info(f"Extracting features for URL: {url}")
                 url_features = self.model(url)  # Example: using a model to extract features
                 features.append(url_features)
-                logger.info(f"Feature extraction completed for URL: {url}")
-    
-            logger.info(f"Extracted features for {len(urls)} URLs.")
+                self.logger.info(f"Feature extraction completed for URL: {url}")
+
+            self.logger.info(f"Extracted features for {len(urls)} URLs.")
             return features
-    
+
         except Exception as e:
-            logger.error(f"Error during feature extraction: {e}")
+            self.logger.error(f"Error during feature extraction: {e}")
             raise
 
     def stop(self):
