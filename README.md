@@ -141,7 +141,7 @@ Contributions are welcome! Please fork the repository, create a new branch, and 
 License
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-### Key Sections of the `README.md`:
+## Key Sections of the `README.md`:
 
 - **Introduction**: Provides a brief overview of the project and its purpose.
 - **Architecture**: Describes the high-level design and the roles of different agents.
@@ -153,4 +153,3 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - **Contributing**: Encourages contributions and provides guidelines.
 - **License**: Specifies the licensing terms for the project.
 
-Feel free to customize any sections or let me know if you want to add more specific details!
