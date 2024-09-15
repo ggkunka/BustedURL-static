@@ -1,5 +1,6 @@
 # scripts/train_model.py
 
+import pandas as pd  # Import pandas library
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.feature_extraction.text import TfidfVectorizer
 from utils.model_helper import load_data, preprocess_data, save_model
