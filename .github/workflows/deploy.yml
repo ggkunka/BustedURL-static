@@ -1,0 +1,33 @@
+name: BustedURL Windows Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+
+    - name: Install dependencies
+      run: |
+        python -m venv bustedurl
+        bustedurl\Scripts\activate
+        pip install --upgrade pip
+        pip install -r requirements.txt
+
+  deploy:
+    runs-on: windows-latest
+    steps:
+    - name: Deploy to Windows PC
+      run: |
+        powershell -File .\scripts\deploy.ps1
