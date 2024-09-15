@@ -51,7 +51,7 @@ def evaluate_trained_model(data_file, target_column, model_path, vectorizer_path
 
         # Evaluate the model
         accuracy = accuracy_score(y_test, y_pred)
-        report = classification_report(y_test, y_pred, labels=['benign', 'malicious'])
+        report = classification_report(y_test, y_pred, labels=['benign', 'malicious'], zero_division=0)
         matrix = confusion_matrix(y_test, y_pred, labels=['benign', 'malicious'])
 
         logger.info(f"Model Accuracy: {accuracy}")
