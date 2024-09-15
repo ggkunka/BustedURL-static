@@ -3,9 +3,17 @@
 import threading
 import time
 import prometheus_client
-from prometheus_client import Gauge
+from prometheus_client import CollectorRegistry, Gauge
 from utils.logger import get_logger
 
+class HealthMonitoringAgent:
+    def __init__(self):
+        # Use a unique registry to avoid duplicate registration errors
+        self.registry = CollectorRegistry()
+        self.cpu_gauge = Gauge('system_cpu_usage', 'CPU usage of the system', registry=self.registry)
+        self.memory_gauge = Gauge('system_memory_usage', 'Memory usage of the system', registry=self.registry)
+
+'''
 class HealthMonitoringAgent(threading.Thread):
     def __init__(self, hub):
         super().__init__()
@@ -44,3 +52,4 @@ class HealthMonitoringAgent(threading.Thread):
         """
         self.active = False
         self.logger.info("Stopping Health Monitoring Agent.")
+'''
