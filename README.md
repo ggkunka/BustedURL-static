@@ -64,61 +64,59 @@ BustedURL/
     └── evaluate_model.py            # Script to evaluate the models
 ```
 
-### File Descriptions
+# BustedURL
 
-- **`app.py`**: Main application file that initializes the Coordination Hub and all agents and starts the workflow.
-- **`requirements.txt`**: Lists all the required Python libraries to run the app.
-- **`README.md`**: Provides a detailed overview of the BustedURL app, its purpose, installation instructions, and usage guidelines.
-- **`agents/`**: Contains all agent-specific Python files. Each file represents an individual agent responsible for a specific task.
-  - **`data_collection.py`**: Responsible for collecting URLs from various data sources.
-  - **`feature_extraction.py`**: Extracts features from collected URLs.
-  - **`classification.py`**: Classifies URLs based on extracted features.
-  - **`response.py`**: Executes actions based on classification results.
-  - **`system_optimizer.py`**: Monitors and optimizes system performance.
-  - **`security_auditor.py`**: Conducts regular security checks.
-  - **`health_monitoring.py`**: Monitors the health and status of all agents.
-- **`core/`**: Contains core system functionalities such as the Coordination Hub.
-  - **`coordination_hub.py`**: Manages inter-agent communication, task distribution, and system optimization.
-- **`utils/`**: Contains utility files.
-  - **`logger.py`**: Provides logging functionalities for the app.
+BustedURL is a Collaborative Multi-Agent System (CMAS) designed to detect and mitigate malicious URLs in real-time. It leverages multiple autonomous agents to work together, improving detection accuracy, adaptability, and system robustness against evolving threats in the cybersecurity landscape.
 
-### Installation and Running the App
+## Table of Contents
 
-To get started with **BustedURL**, follow these steps:
+- [Introduction](#introduction)
+- [Architecture](#architecture)
+- [Agents Overview](#agents-overview)
+- [Core Components](#core-components)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Configuration](#configuration)
+- [Contributing](#contributing)
+- [License](#license)
 
-1. **Clone the Repository:**
+## Introduction
 
-   ```bash
-   git clone https://github.com/ggkunka/BustedURL.git
-   cd BustedURL
-   ```
+With the rise of phishing attacks and malicious URLs, BustedURL offers an innovative solution by employing a decentralized multi-agent system. Each agent within the system has a specialized role, ranging from data collection to real-time response, and works collaboratively to enhance overall system performance and detection rates.
 
-2. **Create a Virtual Environment:**
+## Architecture
 
-   ```bash
-   python -m venv bustedurl_env
-   ```
+BustedURL is built on a decentralized coordination hub that facilitates communication and collaboration among the agents. The system consists of several agents, each responsible for specific tasks:
 
-3. **Activate the Virtual Environment:**
+- **Data Collection Agent**: Collects URLs from multiple sources, including social media, emails, and dark web forums.
+- **Feature Extraction Agent**: Extracts features from URLs using advanced machine learning models (e.g., BERT, RoBERTa).
+- **Classification Agent**: Classifies URLs as malicious or benign using a stacking approach with multiple base models.
+- **Response Agent**: Executes predefined actions based on classification results (e.g., blocking URLs).
+- **System Optimizer Agent**: Monitors and optimizes overall system performance.
+- **Security Auditor Agent**: Conducts regular security audits to identify vulnerabilities and ensure compliance.
+- **Health Monitoring Agent**: Monitors system health and detects anomalies to maintain operational stability.
 
-   - **Windows:**
-     ```bash
-     bustedurl_env\Scripts\activate
-     ```
-   - **Mac/Linux:**
-     ```bash
-     source bustedurl_env/bin/activate
-     ```
+## Agents Overview
 
-4. **Install the Requirements:**
+- **Data Collection Agent**: Responsible for acquiring and pre-processing URLs from various sources in real-time.
+- **Feature Extraction Agent**: Uses ensemble learning techniques to extract features for accurate URL classification.
+- **Classification Agent**: Implements machine learning models to classify URLs as malicious or benign.
+- **Response Agent**: Automatically takes actions to mitigate threats, such as blocking URLs or sending alerts.
+- **System Optimizer Agent**: Continuously evaluates system performance and adjusts resources dynamically.
+- **Security Auditor Agent**: Ensures the system's security posture by identifying and mitigating potential vulnerabilities.
+- **Health Monitoring Agent**: Ensures the health and stability of the entire system by monitoring and responding to anomalies.
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+## Core Components
 
-5. **Run the Application:**
+- **Decentralized Coordination Hub**: The central communication and decision-making entity that enables effective collaboration among agents.
+- **Machine Learning Models**: Utilizes state-of-the-art models (e.g., BERT, Gradient Boosting Machines) for feature extraction and classification.
+- **Stream Processing Framework**: Real-time data processing using frameworks like Apache Kafka.
 
-   ```bash
-   python app.py
-   ```
+## Installation
 
+To get started with BustedURL, clone the repository and install the required dependencies:
+
+```bash
+git clone https://github.com/yourusername/BustedURL.git
+cd BustedURL
+pip install -r requirements.txt
