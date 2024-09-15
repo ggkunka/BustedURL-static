@@ -39,3 +39,20 @@ plotly==5.15.0
 
 # Security and Auditing
 cryptography==40.0.2
+
+# Stream Processing and Real-Time Data Handling
+kafka-python==2.0.2
+
+# API Development
+fastapi==0.99.0
+uvicorn==0.23.0
+
+# Testing and Development
+pytest==7.5.0
+pytest-cov==4.1.0
+
+# Data Serialization
+pyyaml==6.0.1
+
+
+
