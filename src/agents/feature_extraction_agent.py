@@ -5,6 +5,10 @@ import threading
 from utils.logger import get_logger
 from transformers import pipeline
 
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
 class FeatureExtractionAgent(threading.Thread):
     def __init__(self, hub):
         super().__init__()
@@ -13,9 +17,6 @@ class FeatureExtractionAgent(threading.Thread):
         self.active = True
         self.logger = get_logger(self.name)
         self.model = pipeline("feature-extraction", model="bert-base-uncased")
-        # Configure logging
-        logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-        logger = logging.getLogger(__name__)
 
     def run(self):
         """
