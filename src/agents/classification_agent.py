@@ -4,6 +4,7 @@ import threading
 from utils.logger import get_logger
 from sklearn.ensemble import GradientBoostingClassifier
 import numpy as np
+import logging  # Add this line
 
 class ClassificationAgent(threading.Thread):
     def __init__(self, hub):
@@ -13,6 +14,9 @@ class ClassificationAgent(threading.Thread):
         self.active = True
         self.logger = get_logger(self.name)
         self.model = GradientBoostingClassifier()
+        # Configure logging
+        logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+        logger = logging.getLogger(__name__)
 
     def run(self):
         """
@@ -34,6 +38,14 @@ class ClassificationAgent(threading.Thread):
         """
         Classifies URLs based on extracted features.
         """
+        logger.info("Starting classification...")
+        try:
+            predictions = self.model.predict(features)
+            logger.info(f"Classification completed. Predictions: {predictions}")
+            return predictions
+        except Exception as e:
+            logger.error(f"Error during classification: {e}")
+            raise
         features = np.array(features)
         predictions = self.model.predict(features)
         self.logger.info(f"Classified {len(features)} URLs.")
