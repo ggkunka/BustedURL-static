@@ -1,5 +1,6 @@
 # agents/feature_extraction_agent.py
 
+import logging
 import threading
 from utils.logger import get_logger
 from transformers import pipeline
@@ -12,6 +13,9 @@ class FeatureExtractionAgent(threading.Thread):
         self.active = True
         self.logger = get_logger(self.name)
         self.model = pipeline("feature-extraction", model="bert-base-uncased")
+        # Configure logging
+        logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+        logger = logging.getLogger(__name__)
 
     def run(self):
         """
@@ -33,6 +37,14 @@ class FeatureExtractionAgent(threading.Thread):
         """
         Extracts features from URLs using a BERT model.
         """
+        logger.info(f"Extracting features for URL: {url}")
+        try:
+            features = self.model(url)  # Example: using a model to extract features
+            logger.info(f"Feature extraction completed for URL: {url}")
+            return features
+        except Exception as e:
+            logger.error(f"Error during feature extraction: {e}")
+            raise
         features = [self.model(url) for url in urls]
         self.logger.info(f"Extracted features for {len(urls)} URLs.")
         return features
