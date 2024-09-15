@@ -1,5 +1,6 @@
 # agents/security_auditor_agent.py
 
+import logging
 import threading
 import time
 from utils.logger import get_logger
@@ -8,6 +9,8 @@ from pymongo import MongoClient
 class SecurityAuditorAgent(threading.Thread):
     def __init__(self, hub):
         super().__init__()
+        logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+        logger = logging.getLogger(__name__)
         self.hub = hub
         self.name = "SecurityAuditorAgent"
         self.active = True
@@ -38,9 +41,16 @@ class SecurityAuditorAgent(threading.Thread):
         """
         Detects vulnerabilities by simulating security checks.
         """
-        # Placeholder for real security check logic (e.g., using OWASP tools)
-        vulnerabilities = [{"id": 1, "description": "SQL Injection", "severity": "High"}]
-        self.logger.info(f"Detected {len(vulnerabilities)} vulnerabilities.")
+        logger.info("Starting security audit...")
+        try:
+            # Your auditing logic here
+            # Placeholder for real security check logic (e.g., using OWASP tools)
+            vulnerabilities = [{"id": 1, "description": "SQL Injection", "severity": "High"}]
+            self.logger.info(f"Detected {len(vulnerabilities)} vulnerabilities.")
+            logger.info("Security audit completed successfully.")
+        except Exception as e:
+            logger.error(f"Error during security audit: {e}")
+            raise
         return vulnerabilities
 
     def store_results(self, vulnerabilities):
