@@ -120,25 +120,26 @@ To get started with BustedURL, clone the repository and install the required dep
 git clone https://github.com/yourusername/BustedURL.git
 cd BustedURL
 pip install -r requirements.txt
-
-Usage
+```
+## Usage
 Configure the agents and core settings in src/config/.
 Run the system using the entry point script:
-bash
-Copy code
+```
 python src/main.py
+```
 Check the logs and outputs generated in the data/output/ directory.
-Configuration
+
+## Configuration
 Configuration files are located in the src/config/ directory:
 
 settings.py: General configuration settings for the project.
 agents_config.py: Agent-specific configuration settings.
 Adjust these files as needed to match your environment and requirements.
 
-Contributing
+## Contributing
 Contributions are welcome! Please fork the repository, create a new branch, and submit a pull request.
 
-License
+## License
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Key Sections of the `README.md`:
@@ -152,4 +153,3 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - **Configuration**: Details where and how to configure the system settings.
 - **Contributing**: Encourages contributions and provides guidelines.
 - **License**: Specifies the licensing terms for the project.
-
