@@ -1,12 +1,12 @@
 # agents/health_monitoring_agent.py
 
+from multiprocessing import Process
 import psutil
-import threading
 import time
 from prometheus_client import Gauge
 from utils.logger import get_logger
 
-class HealthMonitoringAgent(threading.Thread):
+class HealthMonitoringAgent(Process):  # Switch to Process for multiprocessing
     def __init__(self, hub):
         super().__init__()
         self.hub = hub
@@ -25,31 +25,38 @@ class HealthMonitoringAgent(threading.Thread):
         """
         self.logger.info("Health Monitoring Agent started.")
         while self.active:
-            self.monitor_health()
-            time.sleep(5)  # Monitor every 5 seconds
+            try:
+                self.monitor_health()
+                time.sleep(5)  # Monitor every 5 seconds
+            except Exception as e:
+                self.logger.error(f"Error in {self.name}: {e}")
 
     def monitor_health(self):
         """
         Monitors system CPU, memory, and disk usage.
         """
-        cpu_usage = psutil.cpu_percent()
-        memory_usage = psutil.virtual_memory().percent
-        disk_usage = psutil.disk_usage('/').percent
+        try:
+            cpu_usage = psutil.cpu_percent()
+            memory_usage = psutil.virtual_memory().percent
+            disk_usage = psutil.disk_usage('/').percent
 
-        # Update Prometheus Gauges
-        self.cpu_gauge.set(cpu_usage)
-        self.memory_gauge.set(memory_usage)
-        self.disk_gauge.set(disk_usage)
+            # Update Prometheus Gauges
+            self.cpu_gauge.set(cpu_usage)
+            self.memory_gauge.set(memory_usage)
+            self.disk_gauge.set(disk_usage)
 
-        self.logger.info(f"CPU: {cpu_usage}%, Memory: {memory_usage}%, Disk: {disk_usage}%")
+            self.logger.info(f"CPU: {cpu_usage}%, Memory: {memory_usage}%, Disk: {disk_usage}%")
 
-        # Alert if resource usage exceeds a threshold
-        if cpu_usage > 85:
-            self.logger.warning(f"High CPU usage detected: {cpu_usage}%")
-        if memory_usage > 85:
-            self.logger.warning(f"High Memory usage detected: {memory_usage}%")
-        if disk_usage > 85:
-            self.logger.warning(f"High Disk usage detected: {disk_usage}%")
+            # Alert if resource usage exceeds a threshold
+            if cpu_usage > 85:
+                self.logger.warning(f"High CPU usage detected: {cpu_usage}%")
+            if memory_usage > 85:
+                self.logger.warning(f"High Memory usage detected: {memory_usage}%")
+            if disk_usage > 85:
+                self.logger.warning(f"High Disk usage detected: {disk_usage}%")
+
+        except Exception as e:
+            self.logger.error(f"Error while monitoring system health: {e}")
 
     def stop(self):
         """
