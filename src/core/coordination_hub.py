@@ -19,19 +19,25 @@ class CoordinationHub:
 
     def start(self):
         """
-        Starts the coordination hub.
+        Starts the coordination hub and launches all registered agents.
         """
         self.logger.info("Coordination Hub started.")
+        with self.lock:
+            for agent_name, agent in self.agents.items():
+                agent.start()
+                self.logger.info(f"Agent {agent_name} started.")
 
     def stop(self):
         """
         Stops all agents and shuts down the hub.
         """
+        self.logger.info("Stopping all agents and Coordination Hub.")
         with self.lock:
             for agent_name, agent in self.agents.items():
                 agent.stop()
+                agent.join()  # Ensures all agents stop cleanly
                 self.logger.info(f"Agent {agent_name} stopped.")
-            self.logger.info("Coordination Hub stopped.")
+        self.logger.info("Coordination Hub stopped.")
 
     def send_message(self, sender, receiver, message):
         """
@@ -46,10 +52,24 @@ class CoordinationHub:
 
     def monitor_agents(self):
         """
-        Monitors all registered agents.
+        Monitors all registered agents, restarts non-responsive agents.
         """
+        self.logger.info("Monitoring agents' health.")
         with self.lock:
             for agent_name, agent in self.agents.items():
                 if not agent.is_alive():
-                    self.logger.error(f"Agent {agent_name} is not responding. Restarting...")
-                    agent.start()
+                    self.logger.error(f"Agent {agent_name} is not responding. Restarting agent...")
+                    new_agent = self.restart_agent(agent_name)
+                    self.agents[agent_name] = new_agent
+                    new_agent.start()
+                    self.logger.info(f"Agent {agent_name} restarted.")
+
+    def restart_agent(self, agent_name):
+        """
+        Restarts a failed agent by re-initializing it.
+        """
+        original_agent = self.agents[agent_name]
+        self.logger.info(f"Re-initializing agent: {agent_name}")
+        # Reinitialize the agent with the same configuration
+        new_agent = original_agent.__class__(self)  # Pass the CoordinationHub (self) to the new agent
+        return new_agent
