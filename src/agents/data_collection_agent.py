@@ -1,7 +1,7 @@
 # agents/data_collection_agent.py
 
+from multiprocessing import Process
 import logging
-import threading
 import time
 import requests
 from bs4 import BeautifulSoup
@@ -11,7 +11,7 @@ from utils.logger import get_logger
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-class DataCollectionAgent(threading.Thread):
+class DataCollectionAgent(Process):  # Use Process instead of Thread
     def __init__(self, hub):
         super().__init__()
         self.hub = hub
@@ -21,8 +21,9 @@ class DataCollectionAgent(threading.Thread):
 
     def run(self):
         """
-        Continuously collects URLs from various sources.
+        Continuously collects URLs from various sources and sends them to the FeatureExtractionAgent.
         """
+        self.logger.info(f"{self.name} started.")
         while self.active:
             try:
                 urls = self.collect_urls()
@@ -36,20 +37,21 @@ class DataCollectionAgent(threading.Thread):
         """
         Collects URLs from web sources using BeautifulSoup.
         """
-        logger.info("Starting data collection...")
+        self.logger.info("Starting data collection...")
         try:
-            # Your data collection logic here
-            logger.info("Data collection completed successfully.")
+            urls = []
+            response = requests.get("https://example.com/urls")  # Replace with actual URL source
+            soup = BeautifulSoup(response.content, 'html.parser')
+            for link in soup.find_all('a'):
+                href = link.get('href')
+                if href and href.startswith('http'):
+                    urls.append(href)
+
+            self.logger.info(f"Collected {len(urls)} URLs.")
+            return urls
         except Exception as e:
-            logger.error(f"Error during data collection: {e}")
+            self.logger.error(f"Error during data collection: {e}")
             raise
-        urls = []
-        response = requests.get("https://example.com/urls")  # Replace with actual source
-        soup = BeautifulSoup(response.content, 'html.parser')
-        for link in soup.find_all('a'):
-            urls.append(link.get('href'))
-        self.logger.info(f"Collected {len(urls)} URLs.")
-        return urls
 
     def receive_message(self, sender, message):
         """
