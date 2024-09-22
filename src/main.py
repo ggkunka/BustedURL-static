@@ -1,5 +1,3 @@
-# main.py
-
 from core.coordination_hub import CoordinationHub
 from agents.data_collection_agent import DataCollectionAgent
 from agents.feature_extraction_agent import FeatureExtractionAgent
@@ -19,9 +17,10 @@ logger = logging.getLogger(__name__)
 
 def run_agent(agent):
     """
-    Function to start each agent in its own process.
+    Function to start each agent by running their run() method.
+    This avoids using threading and relies on multiprocessing instead.
     """
-    agent.start()
+    agent.run()
 
 def main():
     """
@@ -32,7 +31,6 @@ def main():
     setup_logging()
 
     logger.info("BustedURL application started")
-    # Initialize agents and components
     try:
         # Initialize the Coordination Hub
         hub = CoordinationHub()
@@ -57,8 +55,8 @@ def main():
     
         # Start the Coordination Hub
         hub.start()
-    
-        # Create processes for each agent
+
+        # Create processes for each agent and directly run the `run()` method
         processes = [
             multiprocessing.Process(target=run_agent, args=(data_collection_agent,)),
             multiprocessing.Process(target=run_agent, args=(feature_extraction_agent,)),
