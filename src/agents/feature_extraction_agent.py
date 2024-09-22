@@ -1,7 +1,7 @@
 # agents/feature_extraction_agent.py
 
+from multiprocessing import Process
 import logging
-import threading
 import time
 from transformers import pipeline
 from utils.logger import get_logger
@@ -10,20 +10,20 @@ from utils.logger import get_logger
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-class FeatureExtractionAgent(threading.Thread):
+class FeatureExtractionAgent(Process):  # Switch to Process for multiprocessing
     def __init__(self, hub):
         super().__init__()
         self.hub = hub
         self.name = "FeatureExtractionAgent"
         self.active = True
         self.logger = get_logger(self.name)
-        #self.model = pipeline("feature-extraction", model="bert-base-uncased")
         self.model = pipeline("feature-extraction", model="bert-base-uncased", clean_up_tokenization_spaces=False)
 
     def run(self):
         """
-        Processes incoming URLs for feature extraction.
+        Continuously processes incoming URLs for feature extraction.
         """
+        self.logger.info(f"{self.name} started.")
         while self.active:
             time.sleep(1)  # Wait for messages to arrive
 
@@ -41,13 +41,12 @@ class FeatureExtractionAgent(threading.Thread):
         Extracts features from URLs using a BERT model.
         """
         try:
-            # Initialize a list to store extracted features
             features = []
 
-            # Loop through each URL and extract features
+            # Extract features for each URL
             for url in urls:
                 self.logger.info(f"Extracting features for URL: {url}")
-                url_features = self.model(url)  # Example: using a model to extract features
+                url_features = self.model(url)  # Extract features using BERT model
                 features.append(url_features)
                 self.logger.info(f"Feature extraction completed for URL: {url}")
 
