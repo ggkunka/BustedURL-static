@@ -1,6 +1,6 @@
 # agents/classification_agent.py
 
-import threading
+from multiprocessing import Process
 import time  # Ensure time is imported for sleep
 from utils.logger import get_logger
 from sklearn.ensemble import GradientBoostingClassifier
@@ -12,7 +12,7 @@ import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-class ClassificationAgent(threading.Thread):
+class ClassificationAgent(Process):  # Inherit from Process for multiprocessing
     def __init__(self, hub):
         super().__init__()
         self.hub = hub
