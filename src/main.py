@@ -10,10 +10,18 @@ from agents.security_auditor_agent import SecurityAuditorAgent
 from agents.health_monitoring_agent import HealthMonitoringAgent
 from utils.logger import setup_logging
 import logging
+import multiprocessing
+import time
 
 # Configure global logging settings
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+
+def run_agent(agent):
+    """
+    Function to start each agent in its own process.
+    """
+    agent.start()
 
 def main():
     """
@@ -50,22 +58,33 @@ def main():
         # Start the Coordination Hub
         hub.start()
     
-        # Start all agents
-        data_collection_agent.start()
-        feature_extraction_agent.start()
-        classification_agent.start()
-        response_agent.start()
-        system_optimizer_agent.start()
-        security_auditor_agent.start()
-        health_monitoring_agent.start()
+        # Create processes for each agent
+        processes = [
+            multiprocessing.Process(target=run_agent, args=(data_collection_agent,)),
+            multiprocessing.Process(target=run_agent, args=(feature_extraction_agent,)),
+            multiprocessing.Process(target=run_agent, args=(classification_agent,)),
+            multiprocessing.Process(target=run_agent, args=(response_agent,)),
+            multiprocessing.Process(target=run_agent, args=(system_optimizer_agent,)),
+            multiprocessing.Process(target=run_agent, args=(security_auditor_agent,)),
+            multiprocessing.Process(target=run_agent, args=(health_monitoring_agent,))
+        ]
+    
+        # Start all processes
+        for process in processes:
+            process.start()
     
         # Monitor agents and handle any failures or restarts
         try:
             while True:
                 hub.monitor_agents()
+                time.sleep(5)  # Adjust the monitoring interval as needed
         except KeyboardInterrupt:
             print("Shutting down BustedURL system...")
             hub.stop()
+            # Terminate all agent processes
+            for process in processes:
+                process.terminate()
+                process.join()
             print("All agents have been stopped. System exited successfully.")
         logger.info("All agents started successfully")
     except Exception as e:
