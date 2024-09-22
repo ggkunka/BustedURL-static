@@ -1,11 +1,11 @@
 # agents/response_agent.py
 
-import threading
+from multiprocessing import Process
 import time
 from utils.logger import get_logger
 from cryptography.fernet import Fernet
 
-class ResponseAgent(threading.Thread):
+class ResponseAgent(Process):  # Switch to Process for multiprocessing
     def __init__(self, hub):
         super().__init__()
         self.hub = hub
@@ -17,8 +17,9 @@ class ResponseAgent(threading.Thread):
 
     def run(self):
         """
-        Listens for messages from other agents and takes action based on classification.
+        Continuously listens for messages from other agents and takes action based on classification.
         """
+        self.logger.info(f"{self.name} started.")
         while self.active:
             time.sleep(1)  # Wait for messages to arrive
 
@@ -48,7 +49,7 @@ class ResponseAgent(threading.Thread):
         """
         Sends an alert for a malicious URL.
         """
-        # Placeholder for alert logic (e.g., send email or SMS alert)
+        # Placeholder for alert logic (e.g., send email, SMS alert, or push to monitoring system)
         self.logger.info(f"Alert sent for malicious URL: {url}, Encrypted: {encrypted_url}")
 
     def stop(self):
