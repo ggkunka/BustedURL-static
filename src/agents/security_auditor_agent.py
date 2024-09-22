@@ -1,11 +1,11 @@
 # agents/security_auditor_agent.py
 
-import threading
+from multiprocessing import Process
 import time
 import subprocess
 from utils.logger import get_logger
 
-class SecurityAuditorAgent(threading.Thread):
+class SecurityAuditorAgent(Process):  # Switch to Process for multiprocessing
     def __init__(self, hub):
         super().__init__()
         self.hub = hub
@@ -19,19 +19,25 @@ class SecurityAuditorAgent(threading.Thread):
         """
         self.logger.info("Security Auditor Agent started.")
         while self.active:
-            self.audit_security()
-            time.sleep(3600)  # Perform security audit every hour
+            try:
+                self.audit_security()
+                time.sleep(3600)  # Perform security audit every hour
+            except Exception as e:
+                self.logger.error(f"Error in {self.name}: {e}")
 
     def audit_security(self):
         """
         Audits the system for security vulnerabilities and compliance.
+        Example: Runs a security scanner like Nmap.
         """
         self.logger.info("Starting security audit...")
-        # Example: Run a vulnerability scanner or compliance check
         try:
-            # Example command using a security tool (Nmap, OpenVAS, etc.)
+            # Example security audit using Nmap (replace with actual security tools like OpenVAS, Nessus, etc.)
             result = subprocess.run(['nmap', '-sP', 'localhost'], capture_output=True, text=True)
-            self.logger.info(f"Security audit results:\n{result.stdout}")
+            if result.returncode == 0:
+                self.logger.info(f"Security audit successful. Results:\n{result.stdout}")
+            else:
+                self.logger.warning(f"Security audit encountered issues. Return Code: {result.returncode}")
         except Exception as e:
             self.logger.error(f"Security audit failed: {e}")
 
