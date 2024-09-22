@@ -17,7 +17,8 @@ class FeatureExtractionAgent(threading.Thread):
         self.name = "FeatureExtractionAgent"
         self.active = True
         self.logger = get_logger(self.name)
-        self.model = pipeline("feature-extraction", model="bert-base-uncased")
+        #self.model = pipeline("feature-extraction", model="bert-base-uncased")
+        self.model = pipeline("feature-extraction", model="bert-base-uncased", clean_up_tokenization_spaces=False)
 
     def run(self):
         """
