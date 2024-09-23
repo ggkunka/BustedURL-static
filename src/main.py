@@ -1,4 +1,4 @@
-# src/main.py
+# main.py
 from core.coordination_hub import CoordinationHub
 from agents.data_collection_agent import DataCollectionAgent
 from agents.feature_extraction_agent import FeatureExtractionAgent
@@ -11,6 +11,7 @@ from utils.logger import setup_logging
 import logging
 import multiprocessing
 import time
+from multiprocessing import Queue
 
 # Configure global logging settings
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -18,9 +19,10 @@ logger = logging.getLogger(__name__)
 
 def run_agent(agent):
     """
-    Function to start each agent by invoking the start() method for multiprocessing.
+    Function to start each agent by running their run() method.
+    This avoids using threading and relies on multiprocessing instead.
     """
-    agent.start()
+    agent.run()
 
 def main():
     """
@@ -32,39 +34,34 @@ def main():
 
     logger.info("BustedURL application started")
     try:
-        # Initialize the Coordination Hub
+        # Initialize the Coordination Hub (if still needed for logging, monitoring, etc.)
         hub = CoordinationHub()
 
-        # Initialize Agents
-        data_collection_agent = DataCollectionAgent(hub)
-        feature_extraction_agent = FeatureExtractionAgent(hub)
-        classification_agent = ClassificationAgent(hub)
-        response_agent = ResponseAgent(hub)
-        system_optimizer_agent = SystemOptimizerAgent(hub)
-        security_auditor_agent = SecurityAuditorAgent(hub)
-        health_monitoring_agent = HealthMonitoringAgent(hub)
+        # Create Queues for inter-process communication
+        input_queue = Queue()
+        output_queue = Queue()
+
+        # Initialize Agents with input_queue and output_queue
+        data_collection_agent = DataCollectionAgent(input_queue, output_queue)
+        feature_extraction_agent = FeatureExtractionAgent(input_queue, output_queue)
+        classification_agent = ClassificationAgent(input_queue, output_queue)
+        response_agent = ResponseAgent(input_queue, output_queue)
+        system_optimizer_agent = SystemOptimizerAgent(input_queue, output_queue)
+        security_auditor_agent = SecurityAuditorAgent(input_queue, output_queue)
+        health_monitoring_agent = HealthMonitoringAgent(input_queue, output_queue)
     
-        # Register Agents with the Coordination Hub
-        hub.register_agent(data_collection_agent)
-        hub.register_agent(feature_extraction_agent)
-        hub.register_agent(classification_agent)
-        hub.register_agent(response_agent)
-        hub.register_agent(system_optimizer_agent)
-        hub.register_agent(security_auditor_agent)
-        hub.register_agent(health_monitoring_agent)
-    
-        # Start the Coordination Hub
+        # Start the Coordination Hub (if necessary)
         hub.start()
 
-        # Create processes for each agent
+        # Create processes for each agent and directly run the `run()` method
         processes = [
-            multiprocessing.Process(target=data_collection_agent.run),
-            multiprocessing.Process(target=feature_extraction_agent.run),
-            multiprocessing.Process(target=classification_agent.run),
-            multiprocessing.Process(target=response_agent.run),
-            multiprocessing.Process(target=system_optimizer_agent.run),
-            multiprocessing.Process(target=security_auditor_agent.run),
-            multiprocessing.Process(target=health_monitoring_agent.run)
+            multiprocessing.Process(target=run_agent, args=(data_collection_agent,)),
+            multiprocessing.Process(target=run_agent, args=(feature_extraction_agent,)),
+            multiprocessing.Process(target=run_agent, args=(classification_agent,)),
+            multiprocessing.Process(target=run_agent, args=(response_agent,)),
+            multiprocessing.Process(target=run_agent, args=(system_optimizer_agent,)),
+            multiprocessing.Process(target=run_agent, args=(security_auditor_agent,)),
+            multiprocessing.Process(target=run_agent, args=(health_monitoring_agent,))
         ]
     
         # Start all processes
@@ -74,12 +71,12 @@ def main():
         # Monitor agents and handle any failures or restarts
         try:
             while True:
-                hub.monitor_agents()
+                # Monitor agent status or handle inter-process communication here
                 time.sleep(5)  # Adjust the monitoring interval as needed
         except KeyboardInterrupt:
             print("Shutting down BustedURL system...")
             hub.stop()
-            # Gracefully terminate all agent processes
+            # Terminate all agent processes
             for process in processes:
                 process.terminate()
                 process.join()
