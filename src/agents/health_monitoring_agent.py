@@ -38,28 +38,36 @@ class HealthMonitoringAgent(Process):
             cpu_usage = psutil.cpu_percent()
             memory_usage = psutil.virtual_memory().percent
 
-            # Debug: Log the available partitions
+            # Initialize disk_usage with a default value (in case disk monitoring fails)
+            disk_usage = -1
+
+            # Log the available partitions
             partitions = psutil.disk_partitions()
             self.logger.info(f"Available partitions: {partitions}")
 
-            # Attempt to use the C:\\ partition first
+            # Attempt to check C:\ partition
             try:
-                disk_usage = psutil.disk_usage(r'C:\\').percent  # Raw string for Windows path
+                disk_usage = psutil.disk_usage(r'C:\\').percent
                 self.logger.info(f"Disk usage for C:\\ is {disk_usage}%")
             except Exception as e:
                 self.logger.warning(f"Error reading C:\\ partition: {e}")
 
-            # If C:\\ fails, attempt to use D:\\
-            try:
-                disk_usage = psutil.disk_usage(r'D:\\').percent  # Try D:\\ if C:\\ fails
-                self.logger.info(f"Disk usage for D:\\ is {disk_usage}%")
-            except Exception as e:
-                self.logger.warning(f"Error reading D:\\ partition: {e}")
+            # If C:\ fails, try D:\
+            if disk_usage == -1:
+                try:
+                    disk_usage = psutil.disk_usage(r'D:\\').percent
+                    self.logger.info(f"Disk usage for D:\\ is {disk_usage}%")
+                except Exception as e:
+                    self.logger.warning(f"Error reading D:\\ partition: {e}")
 
-            # Update Prometheus Gauges
+            # Update global Prometheus Gauges for CPU and Memory, and only update Disk if available
             cpu_gauge.set(cpu_usage)
             memory_gauge.set(memory_usage)
-            disk_gauge.set(disk_usage)
+
+            if disk_usage != -1:
+                disk_gauge.set(disk_usage)
+            else:
+                self.logger.warning("Unable to retrieve disk usage from any partition.")
 
             self.logger.info(f"CPU: {cpu_usage}%, Memory: {memory_usage}%, Disk: {disk_usage}%")
 
@@ -68,7 +76,7 @@ class HealthMonitoringAgent(Process):
                 self.logger.warning(f"High CPU usage detected: {cpu_usage}%")
             if memory_usage > 85:
                 self.logger.warning(f"High Memory usage detected: {memory_usage}%")
-            if disk_usage > 85:
+            if disk_usage > 85 and disk_usage != -1:
                 self.logger.warning(f"High Disk usage detected: {disk_usage}%")
 
         except Exception as e:
