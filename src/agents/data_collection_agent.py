@@ -1,6 +1,4 @@
-# agents/data_collection_agent.py
-
-from multiprocessing import Process
+from multiprocessing import Process, Queue
 import logging
 import time
 import requests
@@ -12,9 +10,10 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 class DataCollectionAgent(Process):  # Use Process instead of Thread
-    def __init__(self, hub):
+    def __init__(self, input_queue: Queue, output_queue: Queue):
         super().__init__()
-        self.hub = hub
+        self.input_queue = input_queue  # Queue for receiving messages
+        self.output_queue = output_queue  # Queue for sending messages
         self.name = "DataCollectionAgent"
         self.active = True
         self.logger = get_logger(self.name)
@@ -26,9 +25,14 @@ class DataCollectionAgent(Process):  # Use Process instead of Thread
         self.logger.info(f"{self.name} started.")
         while self.active:
             try:
+                if not self.input_queue.empty():
+                    message = self.input_queue.get()
+                    sender, data = message['sender'], message['data']
+                    self.receive_message(sender, data)
+
                 urls = self.collect_urls()
                 if urls:
-                    self.hub.send_message(self.name, "FeatureExtractionAgent", {"urls": urls})
+                    self.output_queue.put({"sender": self.name, "urls": urls})
                 time.sleep(60)  # Collect URLs every 60 seconds
             except Exception as e:
                 self.logger.error(f"Error in {self.name}: {e}")
@@ -51,7 +55,7 @@ class DataCollectionAgent(Process):  # Use Process instead of Thread
             return urls
         except Exception as e:
             self.logger.error(f"Error during data collection: {e}")
-            raise
+            return []  # Return empty list in case of error
 
     def receive_message(self, sender, message):
         """
