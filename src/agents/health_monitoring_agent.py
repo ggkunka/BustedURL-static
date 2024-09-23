@@ -39,24 +39,25 @@ class HealthMonitoringAgent(Process):  # Still using Process for multiprocessing
             memory_usage = psutil.virtual_memory().percent
             disk_usage = psutil.disk_usage('/').percent
 
-            # Check if the metrics are valid before logging and updating Prometheus Gauges
+            # Ensure the metrics are valid numbers before logging and updating Prometheus Gauges
             if isinstance(cpu_usage, (int, float)) and isinstance(memory_usage, (int, float)) and isinstance(disk_usage, (int, float)):
                 # Update global Prometheus Gauges
                 cpu_gauge.set(cpu_usage)
                 memory_gauge.set(memory_usage)
                 disk_gauge.set(disk_usage)
 
-                self.logger.info(f"CPU: {cpu_usage}%, Memory: {memory_usage}%, Disk: {disk_usage}%")
+                # Properly format logging message for system health
+                self.logger.info(f"System Health - CPU: {cpu_usage:.2f}%, Memory: {memory_usage:.2f}%, Disk: {disk_usage:.2f}%")
             else:
-                self.logger.warning(f"Invalid data types detected. CPU: {cpu_usage}, Memory: {memory_usage}, Disk: {disk_usage}")
+                self.logger.warning(f"Invalid data detected - CPU: {cpu_usage}, Memory: {memory_usage}, Disk: {disk_usage}")
 
             # Alert if resource usage exceeds a threshold
             if cpu_usage > 85:
-                self.logger.warning(f"High CPU usage detected: {cpu_usage}%")
+                self.logger.warning(f"High CPU usage detected: {cpu_usage:.2f}%")
             if memory_usage > 85:
-                self.logger.warning(f"High Memory usage detected: {memory_usage}%")
+                self.logger.warning(f"High Memory usage detected: {memory_usage:.2f}%")
             if disk_usage > 85:
-                self.logger.warning(f"High Disk usage detected: {disk_usage}%")
+                self.logger.warning(f"High Disk usage detected: {disk_usage:.2f}%")
 
         except Exception as e:
             self.logger.error(f"Error while monitoring system health: {e}")
