@@ -1,6 +1,4 @@
-# agents/feature_extraction_agent.py
-
-from multiprocessing import Process
+from multiprocessing import Process, Queue
 import logging
 import time
 from transformers import pipeline
@@ -10,10 +8,11 @@ from utils.logger import get_logger
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-class FeatureExtractionAgent(Process):  # Switch to Process for multiprocessing
-    def __init__(self, hub):
+class FeatureExtractionAgent(Process):  # Use Process for multiprocessing
+    def __init__(self, input_queue: Queue, output_queue: Queue):
         super().__init__()
-        self.hub = hub
+        self.input_queue = input_queue  # Queue to receive messages
+        self.output_queue = output_queue  # Queue to send messages
         self.name = "FeatureExtractionAgent"
         self.active = True
         self.logger = get_logger(self.name)
@@ -25,7 +24,14 @@ class FeatureExtractionAgent(Process):  # Switch to Process for multiprocessing
         """
         self.logger.info(f"{self.name} started.")
         while self.active:
-            time.sleep(1)  # Wait for messages to arrive
+            try:
+                if not self.input_queue.empty():
+                    message = self.input_queue.get()
+                    sender, data = message['sender'], message['data']
+                    self.receive_message(sender, data)
+                time.sleep(1)  # Adjust the frequency as needed
+            except Exception as e:
+                self.logger.error(f"Error in {self.name}: {e}")
 
     def receive_message(self, sender, message):
         """
@@ -34,7 +40,7 @@ class FeatureExtractionAgent(Process):  # Switch to Process for multiprocessing
         if "urls" in message:
             urls = message["urls"]
             features = self.extract_features(urls)
-            self.hub.send_message(self.name, "ClassificationAgent", {"features": features})
+            self.output_queue.put({"sender": self.name, "features": features})
 
     def extract_features(self, urls):
         """
@@ -55,7 +61,7 @@ class FeatureExtractionAgent(Process):  # Switch to Process for multiprocessing
 
         except Exception as e:
             self.logger.error(f"Error during feature extraction: {e}")
-            raise
+            return []
 
     def stop(self):
         """
