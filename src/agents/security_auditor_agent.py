@@ -1,14 +1,15 @@
 # agents/security_auditor_agent.py
 
-from multiprocessing import Process
+from multiprocessing import Process, Queue
 import time
 import subprocess
 from utils.logger import get_logger
 
 class SecurityAuditorAgent(Process):  # Switch to Process for multiprocessing
-    def __init__(self, hub):
+    def __init__(self, input_queue: Queue, output_queue: Queue):  # Accept input_queue and output_queue
         super().__init__()
-        self.hub = hub
+        self.input_queue = input_queue
+        self.output_queue = output_queue
         self.name = "SecurityAuditorAgent"
         self.active = True
         self.logger = get_logger(self.name)
