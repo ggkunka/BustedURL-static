@@ -39,12 +39,16 @@ class HealthMonitoringAgent(Process):  # Still using Process for multiprocessing
             memory_usage = psutil.virtual_memory().percent
             disk_usage = psutil.disk_usage('/').percent
 
-            # Update global Prometheus Gauges
-            cpu_gauge.set(cpu_usage)
-            memory_gauge.set(memory_usage)
-            disk_gauge.set(disk_usage)
+            # Check if the metrics are valid before logging and updating Prometheus Gauges
+            if isinstance(cpu_usage, (int, float)) and isinstance(memory_usage, (int, float)) and isinstance(disk_usage, (int, float)):
+                # Update global Prometheus Gauges
+                cpu_gauge.set(cpu_usage)
+                memory_gauge.set(memory_usage)
+                disk_gauge.set(disk_usage)
 
-            self.logger.info(f"CPU: {cpu_usage}%, Memory: {memory_usage}%, Disk: {disk_usage}%")
+                self.logger.info(f"CPU: {cpu_usage}%, Memory: {memory_usage}%, Disk: {disk_usage}%")
+            else:
+                self.logger.warning(f"Invalid data types detected. CPU: {cpu_usage}, Memory: {memory_usage}, Disk: {disk_usage}")
 
             # Alert if resource usage exceeds a threshold
             if cpu_usage > 85:
