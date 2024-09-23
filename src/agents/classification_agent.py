@@ -1,6 +1,4 @@
-# agents/classification_agent.py
-
-from multiprocessing import Process
+from multiprocessing import Process, Queue
 import time  # Ensure time is imported for sleep
 from utils.logger import get_logger
 from sklearn.ensemble import GradientBoostingClassifier
@@ -13,9 +11,10 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 class ClassificationAgent(Process):  # Inherit from Process for multiprocessing
-    def __init__(self, hub):
+    def __init__(self, input_queue: Queue, output_queue: Queue):
         super().__init__()
-        self.hub = hub
+        self.input_queue = input_queue  # Queue for receiving messages
+        self.output_queue = output_queue  # Queue for sending messages
         self.name = "ClassificationAgent"
         self.active = True
         self.logger = get_logger(self.name)
@@ -28,7 +27,14 @@ class ClassificationAgent(Process):  # Inherit from Process for multiprocessing
         """
         self.logger.info("Classification Agent started.")
         while self.active:
-            time.sleep(1)  # Wait for messages to arrive
+            try:
+                if not self.input_queue.empty():
+                    message = self.input_queue.get()
+                    sender, data = message['sender'], message['data']
+                    self.receive_message(sender, data)
+                time.sleep(1)  # Wait for messages to arrive
+            except Exception as e:
+                self.logger.error(f"Error in {self.name}: {e}")
 
     def receive_message(self, sender, message):
         """
@@ -38,11 +44,11 @@ class ClassificationAgent(Process):  # Inherit from Process for multiprocessing
             features = message["features"]
             labels = message["labels"]
             classifications = self.classify(features, labels)
-            self.hub.send_message(self.name, "ResponseAgent", {"classifications": classifications})
+            self.output_queue.put({"sender": self.name, "classifications": classifications})
         elif "features" in message:
             features = message["features"]
             classifications = self.classify(features)
-            self.hub.send_message(self.name, "ResponseAgent", {"classifications": classifications})
+            self.output_queue.put({"sender": self.name, "classifications": classifications})
 
     def classify(self, features, true_labels=None):
         """
