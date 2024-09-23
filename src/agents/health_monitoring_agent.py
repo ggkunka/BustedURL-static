@@ -1,4 +1,4 @@
-from multiprocessing import Process
+from multiprocessing import Process, Queue
 import psutil
 import time
 from prometheus_client import Gauge
@@ -10,9 +10,10 @@ memory_gauge = Gauge('system_memory_usage', 'Memory usage of the system')
 disk_gauge = Gauge('system_disk_usage', 'Disk usage of the system')
 
 class HealthMonitoringAgent(Process):  # Still using Process for multiprocessing
-    def __init__(self, hub):
+    def __init__(self, input_queue: Queue, output_queue: Queue):  # Using queues instead of hub
         super().__init__()
-        self.hub = hub
+        self.input_queue = input_queue
+        self.output_queue = output_queue
         self.name = "HealthMonitoringAgent"
         self.active = True
         self.logger = get_logger(self.name)
