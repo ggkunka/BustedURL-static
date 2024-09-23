@@ -42,15 +42,19 @@ class HealthMonitoringAgent(Process):
             partitions = psutil.disk_partitions()
             self.logger.info(f"Available partitions: {partitions}")
 
-            # Use the appropriate disk path for Windows or Unix-like systems
-            if psutil.WINDOWS:
-                # Try using the root partition on Windows
-                disk_usage = psutil.disk_usage('C:/').percent  # Default to C:/
-                self.logger.info(f"Disk usage for C:/ is {disk_usage}%")
-            else:
-                # Unix-like systems (Linux, macOS)
-                disk_usage = psutil.disk_usage('/').percent
-                self.logger.info(f"Disk usage for / is {disk_usage}%")
+            # Attempt to use the C:\\ partition first
+            try:
+                disk_usage = psutil.disk_usage(r'C:\\').percent  # Raw string for Windows path
+                self.logger.info(f"Disk usage for C:\\ is {disk_usage}%")
+            except Exception as e:
+                self.logger.warning(f"Error reading C:\\ partition: {e}")
+
+            # If C:\\ fails, attempt to use D:\\
+            try:
+                disk_usage = psutil.disk_usage(r'D:\\').percent  # Try D:\\ if C:\\ fails
+                self.logger.info(f"Disk usage for D:\\ is {disk_usage}%")
+            except Exception as e:
+                self.logger.warning(f"Error reading D:\\ partition: {e}")
 
             # Update Prometheus Gauges
             cpu_gauge.set(cpu_usage)
