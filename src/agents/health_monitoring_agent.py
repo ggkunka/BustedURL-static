@@ -35,21 +35,27 @@ class HealthMonitoringAgent(Process):  # Still using Process for multiprocessing
         Monitors system CPU, memory, and disk usage.
         """
         try:
-            cpu_usage = float(psutil.cpu_percent())
-            memory_usage = float(psutil.virtual_memory().percent)
-            disk_usage = float(psutil.disk_usage('/').percent)
+            # Collect system metrics
+            cpu_usage = psutil.cpu_percent()
+            memory_usage = psutil.virtual_memory().percent
+            disk_usage = psutil.disk_usage('/').percent
 
-            # Check if the metrics are valid before logging and updating Prometheus Gauges
+            # DEBUG: Log raw metric values before formatting
+            self.logger.debug(f"Raw CPU usage: {cpu_usage}, Memory usage: {memory_usage}, Disk usage: {disk_usage}")
+
+            # Check if the metrics are valid and log them
             if isinstance(cpu_usage, (int, float)) and isinstance(memory_usage, (int, float)) and isinstance(disk_usage, (int, float)):
-                # Update global Prometheus Gauges
-                cpu_gauge.set(cpu_usage)
-                memory_gauge.set(memory_usage)
-                disk_gauge.set(disk_usage)
+                self.logger.debug(f"Valid metrics - CPU: {cpu_usage}, Memory: {memory_usage}, Disk: {disk_usage}")
 
-                # Properly format logging message for system health
+                # Update global Prometheus Gauges
+                cpu_gauge.set(float(cpu_usage))
+                memory_gauge.set(float(memory_usage))
+                disk_gauge.set(float(disk_usage))
+
+                # Properly format and log system health
                 self.logger.info(f"System Health - CPU: {cpu_usage:.2f}%, Memory: {memory_usage:.2f}%, Disk: {disk_usage:.2f}%")
             else:
-                self.logger.warning(f"Invalid data detected - CPU: {cpu_usage}, Memory: {memory_usage}, Disk: {disk_usage}")
+                self.logger.warning(f"Invalid data types detected - CPU: {cpu_usage}, Memory: {memory_usage}, Disk: {disk_usage}")
 
             # Alert if resource usage exceeds a threshold
             if cpu_usage > 85.0:
@@ -60,7 +66,8 @@ class HealthMonitoringAgent(Process):  # Still using Process for multiprocessing
                 self.logger.warning(f"High Disk usage detected: {disk_usage:.2f}%")
 
         except Exception as e:
-            self.logger.error(f"Error while monitoring system health: {e}")
+            # DEBUG: Log exact exception details
+            self.logger.error(f"Error while monitoring system health: {e}", exc_info=True)
 
     def stop(self):
         """
