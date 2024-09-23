@@ -48,7 +48,6 @@ class SystemOptimizerAgent(Process):  # Switch to Process for multiprocessing
         """
         self.logger.info(f"Adjusting parameters based on usage: {usage}%")
         # Placeholder for actual adjustment logic: Scaling down tasks, reducing workload, or tuning models.
-        # This can be extended to handle real-time optimization logic (e.g., reducing the number of threads).
 
     def stop(self):
         """
