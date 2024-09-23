@@ -9,8 +9,8 @@ cpu_gauge = Gauge('system_cpu_usage', 'CPU usage of the system')
 memory_gauge = Gauge('system_memory_usage', 'Memory usage of the system')
 disk_gauge = Gauge('system_disk_usage', 'Disk usage of the system')
 
-class HealthMonitoringAgent(Process):  # Still using Process for multiprocessing
-    def __init__(self, input_queue: Queue, output_queue: Queue):  # Using queues instead of hub
+class HealthMonitoringAgent(Process):
+    def __init__(self, input_queue: Queue, output_queue: Queue):
         super().__init__()
         self.input_queue = input_queue
         self.output_queue = output_queue
@@ -37,18 +37,27 @@ class HealthMonitoringAgent(Process):  # Still using Process for multiprocessing
         try:
             cpu_usage = psutil.cpu_percent()
             memory_usage = psutil.virtual_memory().percent
-            disk_usage = psutil.disk_usage('C:\\').percent  # Updated for Windows
 
-            # Check if the metrics are valid before logging and updating Prometheus Gauges
-            if isinstance(cpu_usage, (int, float)) and isinstance(memory_usage, (int, float)) and isinstance(disk_usage, (int, float)):
-                # Update global Prometheus Gauges
-                cpu_gauge.set(cpu_usage)
-                memory_gauge.set(memory_usage)
-                disk_gauge.set(disk_usage)
+            # Debug: Log the available partitions
+            partitions = psutil.disk_partitions()
+            self.logger.info(f"Available partitions: {partitions}")
 
-                self.logger.info(f"CPU: {cpu_usage}%, Memory: {memory_usage}%, Disk: {disk_usage}%")
+            # Use the appropriate disk path for Windows or Unix-like systems
+            if psutil.WINDOWS:
+                # Try using the root partition on Windows
+                disk_usage = psutil.disk_usage('C:/').percent  # Default to C:/
+                self.logger.info(f"Disk usage for C:/ is {disk_usage}%")
             else:
-                self.logger.warning(f"Invalid data types detected. CPU: {cpu_usage}, Memory: {memory_usage}, Disk: {disk_usage}")
+                # Unix-like systems (Linux, macOS)
+                disk_usage = psutil.disk_usage('/').percent
+                self.logger.info(f"Disk usage for / is {disk_usage}%")
+
+            # Update Prometheus Gauges
+            cpu_gauge.set(cpu_usage)
+            memory_gauge.set(memory_usage)
+            disk_gauge.set(disk_usage)
+
+            self.logger.info(f"CPU: {cpu_usage}%, Memory: {memory_usage}%, Disk: {disk_usage}%")
 
             # Alert if resource usage exceeds a threshold
             if cpu_usage > 85:
