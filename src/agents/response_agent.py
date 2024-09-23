@@ -4,11 +4,13 @@ from multiprocessing import Process
 import time
 from utils.logger import get_logger
 from cryptography.fernet import Fernet
+from multiprocessing import Queue
 
 class ResponseAgent(Process):  # Switch to Process for multiprocessing
-    def __init__(self, hub):
+    def __init__(self, input_queue: Queue, output_queue: Queue):  # Accept input_queue and output_queue
         super().__init__()
-        self.hub = hub
+        self.input_queue = input_queue
+        self.output_queue = output_queue
         self.name = "ResponseAgent"
         self.active = True
         self.logger = get_logger(self.name)
