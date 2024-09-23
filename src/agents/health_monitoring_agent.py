@@ -6,18 +6,18 @@ import time
 from prometheus_client import Gauge
 from utils.logger import get_logger
 
-class HealthMonitoringAgent(Process):  # Switch to Process for multiprocessing
+# Prometheus Gauges - Defined globally to avoid duplicate timeseries
+cpu_gauge = Gauge('system_cpu_usage', 'CPU usage of the system')
+memory_gauge = Gauge('system_memory_usage', 'Memory usage of the system')
+disk_gauge = Gauge('system_disk_usage', 'Disk usage of the system')
+
+class HealthMonitoringAgent(Process):  # Still using Process for multiprocessing
     def __init__(self, hub):
         super().__init__()
         self.hub = hub
         self.name = "HealthMonitoringAgent"
         self.active = True
         self.logger = get_logger(self.name)
-
-        # Prometheus Gauges to monitor system health
-        self.cpu_gauge = Gauge('system_cpu_usage', 'CPU usage of the system')
-        self.memory_gauge = Gauge('system_memory_usage', 'Memory usage of the system')
-        self.disk_gauge = Gauge('system_disk_usage', 'Disk usage of the system')
 
     def run(self):
         """
@@ -40,10 +40,10 @@ class HealthMonitoringAgent(Process):  # Switch to Process for multiprocessing
             memory_usage = psutil.virtual_memory().percent
             disk_usage = psutil.disk_usage('/').percent
 
-            # Update Prometheus Gauges
-            self.cpu_gauge.set(cpu_usage)
-            self.memory_gauge.set(memory_usage)
-            self.disk_gauge.set(disk_usage)
+            # Update global Prometheus Gauges
+            cpu_gauge.set(cpu_usage)
+            memory_gauge.set(memory_usage)
+            disk_gauge.set(disk_usage)
 
             self.logger.info(f"CPU: {cpu_usage}%, Memory: {memory_usage}%, Disk: {disk_usage}%")
 
