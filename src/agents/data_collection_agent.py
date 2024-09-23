@@ -1,111 +1,126 @@
-# main.py
-from core.coordination_hub import CoordinationHub
-from agents.data_collection_agent import DataCollectionAgent
-from agents.feature_extraction_agent import FeatureExtractionAgent
-from agents.classification_agent import ClassificationAgent
-from agents.response_agent import ResponseAgent
-from agents.system_optimizer_agent import SystemOptimizerAgent
-from agents.security_auditor_agent import SecurityAuditorAgent
-from agents.health_monitoring_agent import HealthMonitoringAgent
-from utils.logger import setup_logging
-from utils.data_cleaner import clean_data  # Import the data cleaning function
+from multiprocessing import Process, Queue
+import time  # Ensure time is imported for sleep
+from utils.logger import get_logger
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
+import numpy as np
 import logging
-import multiprocessing
-import time
-from multiprocessing import Queue
-import os
 
-# File paths for the raw and cleaned data
-RAW_DATA_PATH = 'data/raw/raw_data.csv'
-CLEANED_DATA_PATH = 'data/processed/cleaned_data.csv'
-
-# Configure global logging settings
+# Configure global logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-def run_agent(agent):
-    """
-    Function to start each agent by running their run() method.
-    This avoids using threading and relies on multiprocessing instead.
-    """
-    agent.run()
+class ClassificationAgent(Process):  # Inherit from Process for multiprocessing
+    def __init__(self, input_queue: Queue, output_queue: Queue):
+        super().__init__()
+        self.input_queue = input_queue  # Queue for receiving messages
+        self.output_queue = output_queue  # Queue for sending messages
+        self.name = "ClassificationAgent"
+        self.active = True
+        self.logger = get_logger(self.name)
+        self.model = GradientBoostingClassifier()
+        self.is_trained = False  # Flag to check if the model is trained
 
-def main():
-    """
-    Entry point for the BustedURL system.
-    Initializes all agents and starts the decentralized coordination hub.
-    """
-    # Initialize logging
-    setup_logging()
+    def run(self):
+        """
+        Processes incoming features for classification.
+        """
+        self.logger.info("Classification Agent started.")
+        while self.active:
+            try:
+                if not self.input_queue.empty():
+                    message = self.input_queue.get()
+                    sender, data = message['sender'], message['data']
+                    self.receive_message(sender, data)
+                time.sleep(1)  # Wait for messages to arrive
+            except Exception as e:
+                self.logger.error(f"Error in {self.name}: {e}")
 
-    logger.info("BustedURL application started")
-    
-    # Step 1: Clean the raw data
-    logger.info(f"Cleaning data from {RAW_DATA_PATH} and saving it to {CLEANED_DATA_PATH}")
-    try:
-        if not os.path.exists(RAW_DATA_PATH):
-            raise FileNotFoundError(f"Raw data file {RAW_DATA_PATH} not found")
-        
-        clean_data(RAW_DATA_PATH, CLEANED_DATA_PATH)
-        logger.info(f"Data cleaning completed successfully, saved to {CLEANED_DATA_PATH}")
-    except Exception as e:
-        logger.error(f"An error occurred during data cleaning: {e}")
-        return  # Exit if data cleaning fails
+    def receive_message(self, sender, message):
+        """
+        Handles incoming messages from other agents.
+        """
+        if "features" in message and "labels" in message:
+            features = message["features"]
+            labels = message["labels"]
+            classifications = self.classify(features, labels)
+            self.output_queue.put({"sender": self.name, "classifications": classifications})
+        elif "features" in message:
+            features = message["features"]
+            classifications = self.classify(features)
+            self.output_queue.put({"sender": self.name, "classifications": classifications})
 
-    # Step 2: Start agents
-    try:
-        # Initialize the Coordination Hub (if still needed for logging, monitoring, etc.)
-        hub = CoordinationHub()
-
-        # Create Queues for inter-process communication
-        input_queue = Queue()
-        output_queue = Queue()
-
-        # Initialize Agents with input_queue and output_queue
-        data_collection_agent = DataCollectionAgent(input_queue, output_queue)
-        feature_extraction_agent = FeatureExtractionAgent(input_queue, output_queue)
-        classification_agent = ClassificationAgent(input_queue, output_queue)
-        response_agent = ResponseAgent(input_queue, output_queue)
-        system_optimizer_agent = SystemOptimizerAgent(input_queue, output_queue)
-        security_auditor_agent = SecurityAuditorAgent(input_queue, output_queue)
-        health_monitoring_agent = HealthMonitoringAgent(input_queue, output_queue)
-    
-        # Start the Coordination Hub (if necessary)
-        hub.start()
-
-        # Create processes for each agent and directly run the `run()` method
-        processes = [
-            multiprocessing.Process(target=run_agent, args=(data_collection_agent,)),
-            multiprocessing.Process(target=run_agent, args=(feature_extraction_agent,)),
-            multiprocessing.Process(target=run_agent, args=(classification_agent,)),
-            multiprocessing.Process(target=run_agent, args=(response_agent,)),
-            multiprocessing.Process(target=run_agent, args=(system_optimizer_agent,)),
-            multiprocessing.Process(target=run_agent, args=(security_auditor_agent,)),
-            multiprocessing.Process(target=run_agent, args=(health_monitoring_agent,)),
-        ]
-    
-        # Start all processes
-        for process in processes:
-            process.start()
-    
-        # Monitor agents and handle any failures or restarts
+    def classify(self, features, true_labels=None):
+        """
+        Classifies URLs based on extracted features.
+        If true_labels are provided, it calculates and logs the evaluation metrics.
+        """
+        self.logger.info("Starting classification...")
         try:
-            while True:
-                # Monitor agent status or handle inter-process communication here
-                time.sleep(5)  # Adjust the monitoring interval as needed
-        except KeyboardInterrupt:
-            print("Shutting down BustedURL system...")
-            hub.stop()
-            # Terminate all agent processes
-            for process in processes:
-                process.terminate()
-                process.join()
-            print("All agents have been stopped. System exited successfully.")
-        logger.info("All agents started successfully")
-    except Exception as e:
-        logger.error(f"An error occurred in the main execution: {e}")
-        raise
+            features = np.array(features)
+            
+            if not self.is_trained:
+                self.logger.warning("Model is not trained yet. Returning default predictions.")
+                # Return default predictions or handle accordingly
+                return ["benign" for _ in features]
 
+            predictions = self.model.predict(features)
+            self.logger.info(f"Classification completed. Predictions: {predictions}")
 
-if __name__ == "__main__":
-    main()
+            if true_labels is not None:
+                self.evaluate(predictions, true_labels)
+
+            return predictions
+        except Exception as e:
+            self.logger.error(f"Error during classification: {e}")
+            raise
+
+    def train_model(self, X_train, y_train):
+        """
+        Train the classification model.
+        """
+        self.logger.info("Training classification model...")
+        try:
+            self.model.fit(X_train, y_train)
+            self.is_trained = True
+            self.logger.info("Model training completed.")
+        except Exception as e:
+            self.logger.error(f"Error during model training: {e}")
+            raise
+
+    def evaluate(self, predictions, true_labels):
+        """
+        Evaluate the performance of the classification model.
+        Calculates Accuracy, Precision, Recall, F1 Score, and Confusion Matrix.
+        """
+        self.logger.info("Evaluating model performance...")
+        try:
+            accuracy = accuracy_score(true_labels, predictions)
+            precision = precision_score(true_labels, predictions, pos_label='malicious', zero_division=0)
+            recall = recall_score(true_labels, predictions, pos_label='malicious', zero_division=0)
+            f1 = f1_score(true_labels, predictions, pos_label='malicious', zero_division=0)
+            conf_matrix = confusion_matrix(true_labels, predictions, labels=['malicious', 'benign'])
+
+            TN, FP, FN, TP = conf_matrix.ravel()
+
+            self.logger.info(f"Accuracy: {accuracy:.4f}")
+            self.logger.info(f"Precision: {precision:.4f}")
+            self.logger.info(f"Recall: {recall:.4f}")
+            self.logger.info(f"F1 Score: {f1:.4f}")
+            self.logger.info(f"Confusion Matrix:\n{conf_matrix}")
+            self.logger.info(f"True Positives (TP): {TP}")
+            self.logger.info(f"True Negatives (TN): {TN}")
+            self.logger.info(f"False Positives (FP): {FP}")
+            self.logger.info(f"False Negatives (FN): {FN}")
+
+            # Optionally, you can store these metrics or send them to a monitoring system
+        except Exception as e:
+            self.logger.error(f"Error during evaluation: {e}")
+            raise
+
+    def stop(self):
+        """
+        Stops the agent's execution.
+        """
+        self.active = False
+        self.logger.info("Stopping Classification Agent.")
