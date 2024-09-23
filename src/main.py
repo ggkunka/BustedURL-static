@@ -1,3 +1,4 @@
+# src/main.py
 from core.coordination_hub import CoordinationHub
 from agents.data_collection_agent import DataCollectionAgent
 from agents.feature_extraction_agent import FeatureExtractionAgent
@@ -17,10 +18,9 @@ logger = logging.getLogger(__name__)
 
 def run_agent(agent):
     """
-    Function to start each agent by running their run() method.
-    This avoids using threading and relies on multiprocessing instead.
+    Function to start each agent by invoking the start() method for multiprocessing.
     """
-    agent.run()
+    agent.start()
 
 def main():
     """
@@ -56,15 +56,15 @@ def main():
         # Start the Coordination Hub
         hub.start()
 
-        # Create processes for each agent and directly run the `run()` method
+        # Create processes for each agent
         processes = [
-            multiprocessing.Process(target=run_agent, args=(data_collection_agent,)),
-            multiprocessing.Process(target=run_agent, args=(feature_extraction_agent,)),
-            multiprocessing.Process(target=run_agent, args=(classification_agent,)),
-            multiprocessing.Process(target=run_agent, args=(response_agent,)),
-            multiprocessing.Process(target=run_agent, args=(system_optimizer_agent,)),
-            multiprocessing.Process(target=run_agent, args=(security_auditor_agent,)),
-            multiprocessing.Process(target=run_agent, args=(health_monitoring_agent,))
+            multiprocessing.Process(target=data_collection_agent.run),
+            multiprocessing.Process(target=feature_extraction_agent.run),
+            multiprocessing.Process(target=classification_agent.run),
+            multiprocessing.Process(target=response_agent.run),
+            multiprocessing.Process(target=system_optimizer_agent.run),
+            multiprocessing.Process(target=security_auditor_agent.run),
+            multiprocessing.Process(target=health_monitoring_agent.run)
         ]
     
         # Start all processes
@@ -79,7 +79,7 @@ def main():
         except KeyboardInterrupt:
             print("Shutting down BustedURL system...")
             hub.stop()
-            # Terminate all agent processes
+            # Gracefully terminate all agent processes
             for process in processes:
                 process.terminate()
                 process.join()
