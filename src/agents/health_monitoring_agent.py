@@ -35,11 +35,11 @@ class HealthMonitoringAgent(Process):  # Still using Process for multiprocessing
         Monitors system CPU, memory, and disk usage.
         """
         try:
-            cpu_usage = psutil.cpu_percent()
-            memory_usage = psutil.virtual_memory().percent
-            disk_usage = psutil.disk_usage('/').percent
+            cpu_usage = float(psutil.cpu_percent())
+            memory_usage = float(psutil.virtual_memory().percent)
+            disk_usage = float(psutil.disk_usage('/').percent)
 
-            # Ensure the metrics are valid numbers before logging and updating Prometheus Gauges
+            # Check if the metrics are valid before logging and updating Prometheus Gauges
             if isinstance(cpu_usage, (int, float)) and isinstance(memory_usage, (int, float)) and isinstance(disk_usage, (int, float)):
                 # Update global Prometheus Gauges
                 cpu_gauge.set(cpu_usage)
@@ -52,11 +52,11 @@ class HealthMonitoringAgent(Process):  # Still using Process for multiprocessing
                 self.logger.warning(f"Invalid data detected - CPU: {cpu_usage}, Memory: {memory_usage}, Disk: {disk_usage}")
 
             # Alert if resource usage exceeds a threshold
-            if cpu_usage > 85:
+            if cpu_usage > 85.0:
                 self.logger.warning(f"High CPU usage detected: {cpu_usage:.2f}%")
-            if memory_usage > 85:
+            if memory_usage > 85.0:
                 self.logger.warning(f"High Memory usage detected: {memory_usage:.2f}%")
-            if disk_usage > 85:
+            if disk_usage > 85.0:
                 self.logger.warning(f"High Disk usage detected: {disk_usage:.2f}%")
 
         except Exception as e:
