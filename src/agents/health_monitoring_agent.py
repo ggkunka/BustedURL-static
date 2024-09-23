@@ -1,5 +1,3 @@
-# agents/health_monitoring_agent.py
-
 from multiprocessing import Process
 import psutil
 import time
