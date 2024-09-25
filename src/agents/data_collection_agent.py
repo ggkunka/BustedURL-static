@@ -208,4 +208,11 @@ class DataCollectionAgent(Process):
             df.to_csv(file_path, index=False)
             self.logger.info(f"Saved {len(urls)} URLs to {file_path}")
         except Exception as e:
-            self.logger.error(f"Error saving URLs
+            self.logger.error(f"Error saving URLs to file {file_path}: {e}")
+
+    def stop(self):
+        """
+        Stops the agent's execution.
+        """
+        self.active = False
+        self.logger.info("Stopping Data Collection Agent.")
