@@ -7,7 +7,7 @@ from utils.logger import get_logger
 # Prometheus Gauges - Defined globally to avoid duplicate timeseries
 cpu_gauge = Gauge('system_cpu_usage', 'CPU usage of the system')
 memory_gauge = Gauge('system_memory_usage', 'Memory usage of the system')
-disk_gauge = Gauge('system_disk_usage', 'Disk usage of the system')
+disk_gauge = Gauge('home_disk_usage', 'Disk usage of the /home/yzhang10 partition')
 
 class HealthMonitoringAgent(Process):
     def __init__(self, input_queue: Queue, output_queue: Queue):
@@ -32,42 +32,30 @@ class HealthMonitoringAgent(Process):
 
     def monitor_health(self):
         """
-        Monitors system CPU, memory, and disk usage.
+        Monitors system CPU, memory, and disk usage for the /home/yzhang10 partition.
         """
         try:
             cpu_usage = psutil.cpu_percent()
             memory_usage = psutil.virtual_memory().percent
 
-            # Initialize disk_usage with a default value (in case disk monitoring fails)
-            disk_usage = -1
-
-            # Log the available partitions
+            # Monitor /home/yzhang10 partition
             partitions = psutil.disk_partitions()
-            self.logger.info(f"Available partitions: {partitions}")
+            disk_usage = -1  # Default value if the partition is not found
+            for partition in partitions:
+                if partition.mountpoint == '/home/yzhang10':  # Monitor /home/yzhang10
+                    try:
+                        disk_usage = psutil.disk_usage(partition.mountpoint).percent
+                    except Exception as e:
+                        self.logger.warning(f"Error reading {partition.mountpoint} partition: {e}")
 
-            # Attempt to check C:\ partition
-            try:
-                disk_usage = psutil.disk_usage(r'C:\\').percent
-                self.logger.info(f"Disk usage for C:\\ is {disk_usage}%")
-            except Exception as e:
-                self.logger.warning(f"Error reading C:\\ partition: {e}")
-
-            # If C:\ fails, try D:\
             if disk_usage == -1:
-                try:
-                    disk_usage = psutil.disk_usage(r'D:\\').percent
-                    self.logger.info(f"Disk usage for D:\\ is {disk_usage}%")
-                except Exception as e:
-                    self.logger.warning(f"Error reading D:\\ partition: {e}")
+                self.logger.warning(f"Unable to retrieve disk usage from /home/yzhang10.")
 
-            # Update global Prometheus Gauges for CPU and Memory, and only update Disk if available
+            # Update Prometheus Gauges
             cpu_gauge.set(cpu_usage)
             memory_gauge.set(memory_usage)
-
             if disk_usage != -1:
                 disk_gauge.set(disk_usage)
-            else:
-                self.logger.warning("Unable to retrieve disk usage from any partition.")
 
             self.logger.info(f"CPU: {cpu_usage}%, Memory: {memory_usage}%, Disk: {disk_usage}%")
 
@@ -76,7 +64,7 @@ class HealthMonitoringAgent(Process):
                 self.logger.warning(f"High CPU usage detected: {cpu_usage}%")
             if memory_usage > 85:
                 self.logger.warning(f"High Memory usage detected: {memory_usage}%")
-            if disk_usage > 85 and disk_usage != -1:
+            if disk_usage > 85:
                 self.logger.warning(f"High Disk usage detected: {disk_usage}%")
 
         except Exception as e:
