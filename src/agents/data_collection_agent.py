@@ -2,32 +2,45 @@ from multiprocessing import Process, Queue
 import logging
 import time
 import requests
-import pandas as pd
 import os
+import pandas as pd
 from bs4 import BeautifulSoup
+from tweepy import OAuthHandler, API, Cursor
+import imaplib
+import email
+from email.header import decode_header
+import socks
+import socket
+
 from utils.logger import get_logger
+from utils.data_cleaner import clean_urls  # Assuming you have a data_cleaner module
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# Directory paths
-RAW_DATA_PATH = 'data/raw/'
-PROCESSED_DATA_PATH = 'data/processed/'
+# Twitter API credentials (replace these with your keys)
+TWITTER_CONSUMER_KEY = "your_consumer_key"
+TWITTER_CONSUMER_SECRET = "your_consumer_secret"
+TWITTER_ACCESS_TOKEN = "your_access_token"
+TWITTER_ACCESS_SECRET = "your_access_secret"
 
-# Ensure directories exist
-os.makedirs(RAW_DATA_PATH, exist_ok=True)
-os.makedirs(PROCESSED_DATA_PATH, exist_ok=True)
-
-class DataCollectionAgent(Process):  # Use Process instead of Thread
-    def __init__(self, input_queue: Queue, output_queue: Queue, collection_interval=86400):  # Interval set to 1 day (86400 seconds)
+class DataCollectionAgent(Process):
+    def __init__(self, input_queue: Queue, output_queue: Queue):
         super().__init__()
         self.input_queue = input_queue  # Queue for receiving messages
         self.output_queue = output_queue  # Queue for sending messages
         self.name = "DataCollectionAgent"
         self.active = True
-        self.collection_interval = collection_interval  # Interval between data collections (delta updates)
         self.logger = get_logger(self.name)
+        self.raw_dir = 'data/raw'
+        self.processed_dir = 'data/processed'
+        self.output_dir = 'data/output'
+
+        # Ensure directories exist
+        os.makedirs(self.raw_dir, exist_ok=True)
+        os.makedirs(self.processed_dir, exist_ok=True)
+        os.makedirs(self.output_dir, exist_ok=True)
 
     def run(self):
         """
@@ -36,171 +49,163 @@ class DataCollectionAgent(Process):  # Use Process instead of Thread
         self.logger.info(f"{self.name} started.")
         while self.active:
             try:
-                if not self.input_queue.empty():
-                    message = self.input_queue.get()
-                    sender, data = message['sender'], message['data']
-                    self.receive_message(sender, data)
-
                 urls = self.collect_urls()
                 if urls:
-                    # Save raw URLs
-                    self.save_urls(urls, 'raw_urls.csv', raw=True)
+                    self.save_urls_to_file(urls, os.path.join(self.raw_dir, 'raw_urls.csv'))
+                    cleaned_urls = clean_urls(urls)
+                    self.save_urls_to_file(cleaned_urls, os.path.join(self.processed_dir, 'cleaned_urls.csv'))
 
-                    # Here you could add any additional data cleaning if necessary
-                    cleaned_urls = self.clean_urls(urls)
-
-                    # Save processed URLs
-                    self.save_urls(cleaned_urls, 'cleaned_urls.csv', raw=False)
-
+                    # Sending cleaned URLs to other agents for further processing
                     self.output_queue.put({"sender": self.name, "urls": cleaned_urls})
 
-                time.sleep(self.collection_interval)  # Collect URLs based on the specified interval
+                time.sleep(86400)  # Collect URLs every 24 hours
             except Exception as e:
                 self.logger.error(f"Error in {self.name}: {e}")
 
     def collect_urls(self):
         """
-        Collects URLs from multiple web sources, including OpenPhish, PhishTank, and more.
+        Collects URLs from various sources including OpenPhish, PhishTank, Twitter, Email, and dark web.
         """
-        self.logger.info("Starting data collection from multiple sources...")
+        self.logger.info("Starting data collection...")
         urls = []
 
-        # Collect from OpenPhish
+        # Collect from OpenPhish, PhishTank, Phishing Database (same as before)
         urls += self.collect_from_openphish()
-
-        # Collect from PhishTank
         urls += self.collect_from_phishtank()
-
-        # Collect from Alexa Top Sites (Benign URLs)
-        urls += self.collect_from_alexa()
-
-        # Optionally, collect from Phishing.Database (if desired)
         urls += self.collect_from_phishing_database()
 
-        # Commenting out Google Chrome History fetching as it's a server environment
-        # urls += self.collect_from_chrome_history()
+        # Collect from Twitter (social media)
+        urls += self.collect_from_twitter()
+
+        # Collect from emails (IMAP)
+        urls += self.collect_from_emails()
+
+        # Collect from dark web forums (through Tor)
+        urls += self.collect_from_dark_web()
 
         self.logger.info(f"Total URLs collected: {len(urls)}")
         return urls
 
     def collect_from_openphish(self):
-        """
-        Collects malicious URLs from OpenPhish.
-        """
-        self.logger.info("Collecting URLs from OpenPhish...")
-        openphish_url = "https://openphish.com/feed.txt"
+        """Collect URLs from OpenPhish."""
         urls = []
         try:
-            response = requests.get(openphish_url)
-            if response.status_code == 200:
-                urls = response.text.splitlines()
-                self.logger.info(f"Collected {len(urls)} URLs from OpenPhish.")
-            else:
-                self.logger.warning(f"Failed to collect from OpenPhish. Status code: {response.status_code}")
+            self.logger.info("Collecting URLs from OpenPhish...")
+            response = requests.get("https://openphish.com/feed.txt")
+            urls += response.text.splitlines()
+            self.logger.info(f"Collected {len(urls)} URLs from OpenPhish.")
         except Exception as e:
             self.logger.error(f"Error collecting from OpenPhish: {e}")
         return urls
 
     def collect_from_phishtank(self):
-        """
-        Collects malicious URLs from PhishTank.
-        """
-        self.logger.info("Collecting URLs from PhishTank...")
-        phishtank_url = "http://data.phishtank.com/data/online-valid.csv"
+        """Collect URLs from PhishTank."""
         urls = []
         try:
-            response = requests.get(phishtank_url)
-            if response.status_code == 200:
-                df = pd.read_csv(pd.compat.StringIO(response.text))
-                urls = df['url'].tolist()
-                self.logger.info(f"Collected {len(urls)} URLs from PhishTank.")
-            else:
-                self.logger.warning(f"Failed to collect from PhishTank. Status code: {response.status_code}")
+            self.logger.info("Collecting URLs from PhishTank...")
+            response = requests.get("http://data.phishtank.com/data/online-valid.csv")
+            df = pd.read_csv(pd.compat.StringIO(response.text))
+            urls += df['url'].tolist()
+            self.logger.info(f"Collected {len(df)} URLs from PhishTank.")
         except Exception as e:
             self.logger.error(f"Error collecting from PhishTank: {e}")
         return urls
 
-    def collect_from_alexa(self):
-        """
-        Collects benign URLs from Alexa's top sites.
-        """
-        self.logger.info("Collecting benign URLs from Alexa Top Sites...")
-        alexa_url = "http://s3.amazonaws.com/alexa-static/top-1m.csv.zip"
-        urls = []
-        try:
-            response = requests.get(alexa_url)
-            if response.status_code == 200:
-                df = pd.read_csv(pd.compat.StringIO(response.text), header=None, names=['rank', 'url'])
-                urls = df['url'].tolist()
-                self.logger.info(f"Collected {len(urls)} benign URLs from Alexa Top Sites.")
-            else:
-                self.logger.warning(f"Failed to collect from Alexa Top Sites. Status code: {response.status_code}")
-        except Exception as e:
-            self.logger.error(f"Error collecting from Alexa Top Sites: {e}")
-        return urls
-
     def collect_from_phishing_database(self):
-        """
-        Collects malicious URLs from Phishing.Database.
-        """
-        self.logger.info("Collecting URLs from Phishing.Database...")
-        phishing_db_url = "https://raw.githubusercontent.com/mitchellkrogza/Phishing.Database/master/phishing-links-ALL.txt"
+        """Collect URLs from Phishing Database."""
         urls = []
         try:
-            response = requests.get(phishing_db_url)
+            self.logger.info("Collecting URLs from Phishing.Database...")
+            response = requests.get("https://phishingdatabase.com/download/all.txt")
             if response.status_code == 200:
-                urls = response.text.splitlines()
-                self.logger.info(f"Collected {len(urls)} URLs from Phishing.Database.")
+                urls += response.text.splitlines()
             else:
                 self.logger.warning(f"Failed to collect from Phishing.Database. Status code: {response.status_code}")
         except Exception as e:
             self.logger.error(f"Error collecting from Phishing.Database: {e}")
         return urls
 
-    def clean_urls(self, urls):
-        """
-        Cleans the URLs by removing duplicates and ensuring well-formed URLs.
-        """
-        self.logger.info("Cleaning collected URLs...")
-        cleaned_urls = list(set(urls))  # Removing duplicates
-        self.logger.info(f"Cleaned URLs, reduced to {len(cleaned_urls)} from {len(urls)} original URLs.")
-        return cleaned_urls
+    def collect_from_twitter(self):
+        """Collect URLs from Twitter using Tweepy."""
+        urls = []
+        try:
+            self.logger.info("Collecting URLs from Twitter...")
+            auth = OAuthHandler(TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET)
+            auth.set_access_token(TWITTER_ACCESS_TOKEN, TWITTER_ACCESS_SECRET)
+            api = API(auth)
 
-    def save_urls(self, urls, filename, raw=True):
+            for tweet in Cursor(api.search_tweets, q="http", lang="en").items(100):  # Modify search criteria as needed
+                for url in tweet.entities.get("urls", []):
+                    urls.append(url["expanded_url"])
+
+            self.logger.info(f"Collected {len(urls)} URLs from Twitter.")
+        except Exception as e:
+            self.logger.error(f"Error collecting from Twitter: {e}")
+        return urls
+
+    def collect_from_emails(self):
+        """Collect URLs from emails using IMAP."""
+        urls = []
+        try:
+            self.logger.info("Collecting URLs from email...")
+            mail = imaplib.IMAP4_SSL("imap.gmail.com")  # Use your IMAP provider
+            mail.login("your_email@gmail.com", "your_password")  # Replace with actual credentials
+            mail.select("inbox")
+
+            result, data = mail.search(None, "ALL")
+            email_ids = data[0].split()
+
+            for email_id in email_ids[-10:]:  # Process the last 10 emails
+                result, message_data = mail.fetch(email_id, "(RFC822)")
+                for response_part in message_data:
+                    if isinstance(response_part, tuple):
+                        msg = email.message_from_bytes(response_part[1])
+                        if msg.is_multipart():
+                            for part in msg.walk():
+                                if part.get_content_type() == "text/html":
+                                    body = part.get_payload(decode=True)
+                                    soup = BeautifulSoup(body, 'html.parser')
+                                    for a in soup.find_all('a', href=True):
+                                        urls.append(a['href'])
+                        else:
+                            body = msg.get_payload(decode=True)
+                            soup = BeautifulSoup(body, 'html.parser')
+                            for a in soup.find_all('a', href=True):
+                                urls.append(a['href'])
+
+            self.logger.info(f"Collected {len(urls)} URLs from email.")
+        except Exception as e:
+            self.logger.error(f"Error collecting from email: {e}")
+        return urls
+
+    def collect_from_dark_web(self):
+        """Collect URLs from the dark web through Tor."""
+        urls = []
+        try:
+            self.logger.info("Collecting URLs from dark web...")
+            # Set up Tor proxy
+            socks.set_default_proxy(socks.SOCKS5, "127.0.0.1", 9050)  # Tor default proxy
+            socket.socket = socks.socksocket
+
+            response = requests.get("http://exampleonion.onion")  # Replace with actual dark web site
+            soup = BeautifulSoup(response.content, 'html.parser')
+            for link in soup.find_all('a'):
+                href = link.get('href')
+                if href and href.startswith('http'):
+                    urls.append(href)
+
+            self.logger.info(f"Collected {len(urls)} URLs from dark web.")
+        except Exception as e:
+            self.logger.error(f"Error collecting from dark web: {e}")
+        return urls
+
+    def save_urls_to_file(self, urls, file_path):
         """
-        Saves URLs to the appropriate directory (raw or processed).
+        Saves a list of URLs to a CSV file.
         """
-        if raw:
-            path = os.path.join(RAW_DATA_PATH, filename)
-        else:
-            path = os.path.join(PROCESSED_DATA_PATH, filename)
-        
         try:
             df = pd.DataFrame(urls, columns=['url'])
-            df.to_csv(path, index=False)
-            self.logger.info(f"Saved {len(urls)} URLs to {path}")
+            df.to_csv(file_path, index=False)
+            self.logger.info(f"Saved {len(urls)} URLs to {file_path}")
         except Exception as e:
-            self.logger.error(f"Error saving URLs to {path}: {e}")
-
-    # Commenting out Chrome History fetching as it's a server environment
-    # def collect_from_chrome_history(self):
-    #     """
-    #     Collects benign URLs from Google Chrome browsing history (only applicable in local environments).
-    #     """
-    #     self.logger.info("Collecting URLs from Google Chrome History...")
-    #     # Fetching Chrome history logic would go here
-    #     urls = []
-    #     return urls
-
-    def receive_message(self, sender, message):
-        """
-        Handles incoming messages from other agents.
-        """
-        self.logger.info(f"Received message from {sender}: {message}")
-
-    def stop(self):
-        """
-        Stops the agent's execution.
-        """
-        self.active = False
-        self.logger.info("Stopping Data Collection Agent.")
+            self.logger.error(f"Error saving URLs
