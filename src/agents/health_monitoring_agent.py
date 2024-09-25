@@ -42,7 +42,7 @@ class HealthMonitoringAgent(Process):
             partitions = psutil.disk_partitions()
             disk_usage = -1  # Default value if the partition is not found
             for partition in partitions:
-                if partition.mountpoint == '/home/yzhang10':  # Monitor /home/yzhang10
+                if partition.mountpoint == '/home':  # Monitor /home
                     try:
                         disk_usage = psutil.disk_usage(partition.mountpoint).percent
                     except Exception as e:
