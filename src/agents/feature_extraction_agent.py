@@ -3,6 +3,7 @@ import logging
 import time
 from transformers import pipeline
 from utils.logger import get_logger
+import numpy as np  # To combine feature outputs
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -16,7 +17,14 @@ class FeatureExtractionAgent(Process):  # Use Process for multiprocessing
         self.name = "FeatureExtractionAgent"
         self.active = True
         self.logger = get_logger(self.name)
-        self.model = pipeline("feature-extraction", model="bert-base-uncased", clean_up_tokenization_spaces=False)
+
+        # Load multiple transformer models for ensemble learning
+        self.models = {
+            "bert": pipeline("feature-extraction", model="bert-base-uncased", clean_up_tokenization_spaces=False),
+            "roberta": pipeline("feature-extraction", model="roberta-base", clean_up_tokenization_spaces=False),
+            "xlnet": pipeline("feature-extraction", model="xlnet-base-cased", clean_up_tokenization_spaces=False),
+            "distilbert": pipeline("feature-extraction", model="distilbert-base-uncased", clean_up_tokenization_spaces=False)
+        }
 
     def run(self):
         """
@@ -44,7 +52,7 @@ class FeatureExtractionAgent(Process):  # Use Process for multiprocessing
 
     def extract_features(self, urls):
         """
-        Extracts features from URLs using a BERT model.
+        Extracts features from URLs using an ensemble of transformer models (BERT, RoBERTa, XLNet, DistilBERT).
         """
         try:
             features = []
@@ -52,8 +60,14 @@ class FeatureExtractionAgent(Process):  # Use Process for multiprocessing
             # Extract features for each URL
             for url in urls:
                 self.logger.info(f"Extracting features for URL: {url}")
-                url_features = self.model(url)  # Extract features using BERT model
-                features.append(url_features)
+
+                # Run each model and collect features
+                url_features = {model_name: self.models[model_name](url) for model_name in self.models}
+                
+                # Combine features from all models using an ensemble method
+                combined_features = self.combine_features(url_features)
+                
+                features.append(combined_features)
                 self.logger.info(f"Feature extraction completed for URL: {url}")
 
             self.logger.info(f"Extracted features for {len(urls)} URLs.")
@@ -61,6 +75,21 @@ class FeatureExtractionAgent(Process):  # Use Process for multiprocessing
 
         except Exception as e:
             self.logger.error(f"Error during feature extraction: {e}")
+            return []
+
+    def combine_features(self, url_features):
+        """
+        Combines features from multiple transformer models into a single feature vector.
+        You can use averaging, concatenation, or other ensemble methods.
+        """
+        try:
+            # Here we use simple averaging of the feature vectors from all models
+            model_feature_vectors = [np.array(features[0]) for features in url_features.values()]  # Extract the feature arrays
+            combined_features = np.mean(model_feature_vectors, axis=0)  # Take the average of all model outputs
+            return combined_features.tolist()
+
+        except Exception as e:
+            self.logger.error(f"Error during feature combination: {e}")
             return []
 
     def stop(self):
