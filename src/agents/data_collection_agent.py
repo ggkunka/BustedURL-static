@@ -11,6 +11,7 @@ import email
 from email.header import decode_header
 import socks
 import socket
+from io import StringIO
 
 from utils.logger import get_logger
 from utils.data_cleaner import clean_urls  # Assuming you have a data_cleaner module
