@@ -68,6 +68,8 @@ BustedURL/
 
 BustedURL is a Collaborative Multi-Agent System (CMAS) designed to detect and mitigate malicious URLs in real-time. It leverages multiple autonomous agents to work together, improving detection accuracy, adaptability, and system robustness against evolving threats in the cybersecurity landscape.
 
+Paper accepted at ADC-2024. https://adc-conference.github.io/2024/program/accepted-papers
+
 ## Table of Contents
 
 - [Introduction](#introduction)
